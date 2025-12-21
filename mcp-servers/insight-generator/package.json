@@ -1,0 +1,11 @@
+{
+  "name": "mcp-insight-generator",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "express": "^4.18.2",
+    "@anthropic-ai/sdk": "^0.20.0",
+    "dotenv": "^16.4.1"
+  }
+}

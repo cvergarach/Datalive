@@ -1,0 +1,17 @@
+{
+  "name": "mcp-api-analyzer",
+  "version": "1.0.0",
+  "description": "MCP Server for analyzing API documentation",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "@google/generative-ai": "^0.21.0",
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "dotenv": "^16.4.1"
+  }
+}
