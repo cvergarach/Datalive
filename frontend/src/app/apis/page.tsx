@@ -1,18 +1,10 @@
-'use client';
-
 import React from 'react';
 
-// Forcing module detection with a dummy export if needed, 
-// though export default should be enough.
-export const metadata = {
-    title: 'APIs - DataLive',
-};
-
+// Simplified Server Component to ensure module detection.
 export default function APIsPage() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
             <div className="max-w-7xl mx-auto">
-                {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                         APIs
@@ -22,7 +14,6 @@ export default function APIsPage() {
                     </p>
                 </div>
 
-                {/* Card */}
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
                         APIs
@@ -35,3 +26,7 @@ export default function APIsPage() {
         </div>
     );
 }
+
+// Ensure it's treated as a dynamic page if necessary, 
+// but for now a simple export is enough.
+export const dynamic = 'force-dynamic';
