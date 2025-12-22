@@ -15,20 +15,22 @@ router.get('/', async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Get projects where user is member
-    const { data: memberships, error: memberError } = await supabase
-      .from('project_members')
-      .select('project_id, role, projects(*)')
-      .eq('user_id', userId);
+    // Use admin client to ensure we get all projects owned by user, bypassing RLS or missing member records
+    const { data: projects, error } = await supabaseAdmin
+      .from('projects')
+      .select('*')
+      .eq('owner_id', userId)
+      .order('created_at', { ascending: false });
 
-    if (memberError) throw memberError;
+    if (error) throw error;
 
-    const projects = memberships.map(m => ({
-      ...m.projects,
-      user_role: m.role
+    // Add owner role manually since we know they are the owner
+    const projectsWithRole = projects.map(p => ({
+      ...p,
+      user_role: 'owner'
     }));
 
-    res.json({ projects });
+    res.json({ projects: projectsWithRole });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
