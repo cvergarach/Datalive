@@ -1,4 +1,5 @@
-import { GoogleGenerativeAI, GoogleAIFileManager } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleAIFileManager } from '@google/generative-ai/server';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
