@@ -1,5 +1,13 @@
 'use client';
 
+import React from 'react';
+
+// Forcing module detection with a dummy export if needed, 
+// though export default should be enough.
+export const metadata = {
+    title: 'APIs - DataLive',
+};
+
 export default function APIsPage() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
