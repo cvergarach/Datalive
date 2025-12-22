@@ -73,8 +73,6 @@
 
   body {
     @apply bg-background text-foreground;
-    border: 10px solid red !important;
-    /* DEBUG: Verify CSS loading. User, please check for this red border. */
   }
 }
 
