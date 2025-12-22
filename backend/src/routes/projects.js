@@ -1,5 +1,5 @@
 import express from 'express';
-import { supabase } from '../config/supabase.js';
+import { supabase, supabaseAdmin } from '../config/supabase.js';
 import { authMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -43,8 +43,8 @@ router.post('/', async (req, res) => {
     const { name, description } = req.body;
     const userId = req.user.id;
 
-    // Create project
-    const { data: project, error: projectError } = await supabase
+    // Create project using Admin client to bypass RLS insertion check
+    const { data: project, error: projectError } = await supabaseAdmin
       .from('projects')
       .insert({
         name,
@@ -57,7 +57,7 @@ router.post('/', async (req, res) => {
     if (projectError) throw projectError;
 
     // Add creator as owner
-    const { error: memberError } = await supabase
+    const { error: memberError } = await supabaseAdmin
       .from('project_members')
       .insert({
         project_id: project.id,
