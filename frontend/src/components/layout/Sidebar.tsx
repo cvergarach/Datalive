@@ -30,7 +30,7 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Projects', href: '/projects', icon: FolderOpen },
   { name: 'Documents', href: '/documents', icon: FileText },
-  { name: 'APIs', href: '/apis', icon: Database },
+  { name: 'APIs', href: '/my-apis', icon: Database },
   { name: 'Data', href: '/data', icon: BarChart3 },
   { name: 'Chats', href: '/chats', icon: MessageSquare },
   { name: 'Insights', href: '/insights', icon: Lightbulb },
