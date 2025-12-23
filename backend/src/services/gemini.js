@@ -28,10 +28,12 @@ class GeminiService {
 
       console.log(`📂 Leyendo archivo para subir: ${filePath}, MimeType: ${effectiveMimeType}`);
       const fileData = fs.readFileSync(filePath);
+      const sizeBytes = fileData.length;
 
       const uploadResult = await client.files.upload({
         file: {
           data: fileData.toString('base64'),
+          sizeBytes: sizeBytes,
         },
         config: {
           displayName: fileName,
