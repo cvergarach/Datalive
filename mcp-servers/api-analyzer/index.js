@@ -1,5 +1,5 @@
 import express from 'express';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { createClient } from '@google/genai';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -9,8 +9,8 @@ const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+const client = createClient({ apiKey: process.env.GEMINI_API_KEY });
+const modelName = 'gemini-2.5-flash';
 
 // MCP Tool: Analyze API Documentation
 app.post('/mcp/call', async (req, res) => {
@@ -80,17 +80,20 @@ Return as JSON with this structure:
 }
 `;
 
-  const result = await model.generateContent([
-    {
-      fileData: {
-        fileUri: geminiUri,
-        mimeType: 'application/pdf'
-      }
-    },
-    { text: prompt }
-  ]);
+  const result = await client.models.generateContent({
+    model: modelName,
+    contents: [
+      {
+        fileData: {
+          fileUri: geminiUri,
+          mimeType: 'application/pdf'
+        }
+      },
+      prompt
+    ]
+  });
 
-  const text = result.response.text();
+  const text = result.text;
   const jsonMatch = text.match(/\{[\s\S]*\}/);
 
   if (jsonMatch) {

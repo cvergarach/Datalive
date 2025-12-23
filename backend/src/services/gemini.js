@@ -1,5 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { GoogleAIFileManager } from '@google/generative-ai/server';
+import { createClient } from '@google/genai';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
@@ -12,12 +11,11 @@ if (!apiKey) {
   throw new Error('GEMINI_API_KEY not found in environment variables');
 }
 
-const genAI = new GoogleGenerativeAI(apiKey);
-const fileManager = new GoogleAIFileManager(apiKey);
+const client = createClient({ apiKey });
 
 class GeminiService {
   constructor() {
-    this.model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    this.model = 'gemini-2.5-flash';
   }
 
   /**
@@ -26,20 +24,24 @@ class GeminiService {
   async uploadFile(filePath, displayName = null) {
     try {
       const fileName = displayName || path.basename(filePath);
+      const fileData = fs.readFileSync(filePath);
 
-      const uploadResult = await fileManager.uploadFile(filePath, {
-        mimeType: this.getMimeType(filePath),
-        displayName: fileName
+      const uploadResult = await client.files.upload({
+        file: {
+          data: fileData,
+          mimeType: this.getMimeType(filePath),
+        },
+        config: { displayName: fileName }
       });
 
-      console.log(`✅ File uploaded to Gemini: ${uploadResult.file.uri}`);
+      console.log(`✅ File uploaded to Gemini: ${uploadResult.uri}`);
 
       return {
-        uri: uploadResult.file.uri,
-        name: uploadResult.file.name,
-        displayName: uploadResult.file.displayName,
-        mimeType: uploadResult.file.mimeType,
-        sizeBytes: uploadResult.file.sizeBytes
+        uri: uploadResult.uri,
+        name: uploadResult.name,
+        displayName: uploadResult.displayName,
+        mimeType: uploadResult.mimeType,
+        sizeBytes: uploadResult.sizeBytes
       };
     } catch (error) {
       console.error('Error uploading file to Gemini:', error);
@@ -52,7 +54,7 @@ class GeminiService {
    */
   async getFileStatus(fileName) {
     try {
-      const file = await fileManager.getFile(fileName);
+      const file = await client.files.get({ name: fileName });
       return {
         uri: file.uri,
         state: file.state, // PROCESSING, ACTIVE, FAILED
@@ -90,17 +92,20 @@ class GeminiService {
    */
   async queryFile(fileUri, prompt) {
     try {
-      const result = await this.model.generateContent([
-        {
-          fileData: {
-            fileUri: fileUri,
-            mimeType: 'application/pdf' // Adjust based on file type
-          }
-        },
-        { text: prompt }
-      ]);
+      const result = await client.models.generateContent({
+        model: this.model,
+        contents: [
+          {
+            fileData: {
+              fileUri: fileUri,
+              mimeType: 'application/pdf' // Adjust based on file type
+            }
+          },
+          prompt
+        ]
+      });
 
-      return result.response.text();
+      return result.text;
     } catch (error) {
       console.error('Error querying file:', error);
       throw new Error(`Failed to query file: ${error.message}`);
@@ -112,7 +117,7 @@ class GeminiService {
    */
   async deleteFile(fileName) {
     try {
-      await fileManager.deleteFile(fileName);
+      await client.files.delete({ name: fileName });
       console.log(`🗑️ File deleted from Gemini: ${fileName}`);
     } catch (error) {
       console.error('Error deleting file:', error);
