@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'DataLive - API Documentation Platform',
   description: 'Transform API documentation into actionable insights',
+  icons: {
+    icon: '/icon.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

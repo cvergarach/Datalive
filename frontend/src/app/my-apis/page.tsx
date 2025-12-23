@@ -16,8 +16,10 @@ import {
     Database,
     Search,
     CheckCircle2,
-    AlertCircle
+    AlertCircle,
+    Plus
 } from 'lucide-react';
+import { ConfigureApiModal } from '@/components/shared/ConfigureApiModal';
 
 export default function APIsPage() {
     const [projects, setProjects] = useState<any[]>([]);
@@ -25,6 +27,10 @@ export default function APIsPage() {
     const [apis, setApis] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [expandedApi, setExpandedApi] = useState<string | null>(null);
+
+    // Configuration state
+    const [configModalOpen, setConfigModalOpen] = useState(false);
+    const [apiToConfigure, setApiToConfigure] = useState<any | null>(null);
 
     useEffect(() => {
         fetchProjects();
@@ -160,7 +166,14 @@ export default function APIsPage() {
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-2">
-                                                    <Button variant="outline" size="sm">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            setApiToConfigure(apiItem);
+                                                            setConfigModalOpen(true);
+                                                        }}
+                                                    >
                                                         <Settings className="mr-2 h-4 w-4" /> Configure
                                                     </Button>
                                                     <Button
@@ -239,6 +252,22 @@ export default function APIsPage() {
                         )}
                     </div>
                 </main>
+
+                {/* Configure API Modal */}
+                {apiToConfigure && (
+                    <ConfigureApiModal
+                        isOpen={configModalOpen}
+                        onClose={() => {
+                            setConfigModalOpen(false);
+                            setApiToConfigure(null);
+                        }}
+                        onSuccess={() => {
+                            fetchApis(selectedProjectId);
+                        }}
+                        projectId={selectedProjectId}
+                        apiItem={apiToConfigure}
+                    />
+                )}
             </div>
         </div>
     );
