@@ -163,12 +163,13 @@ function isRelevantLink(url, baseUrl) {
         }
 
         const path = urlObj.pathname.toLowerCase();
+        const basePath = baseObj.pathname.toLowerCase();
 
         // Exclude non-documentation paths
         const excludePatterns = [
             '/blog', '/pricing', '/about', '/contact', '/login', '/signup',
-            '/terms', '/privacy', '/legal', '/support', '/community',
-            '.pdf', '.zip', '.tar', '.gz', '/download'
+            '/terms', '/privacy', '/legal', '/support', '/community', '/partners',
+            '.pdf', '.zip', '.tar', '.gz', '/download', '/changelog', '/status'
         ];
 
         if (excludePatterns.some(pattern => path.includes(pattern))) {
@@ -181,7 +182,12 @@ function isRelevantLink(url, baseUrl) {
             '/endpoint', '/resource', '/method', '/v1', '/v2', '/v3'
         ];
 
-        return includePatterns.some(pattern => path.includes(pattern));
+                
+        // Accept if path starts with base path OR contains API keywords
+        const startsWithBasePath = path.startsWith(basePath.replace(/$/, ''));
+        const hasApiKeywords = includePatterns.some(pattern => path.includes(pattern));
+        return startsWithBasePath || hasApiKeywords;
+
     } catch (e) {
         return false;
     }
