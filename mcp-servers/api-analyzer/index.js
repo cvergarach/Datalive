@@ -41,16 +41,17 @@ app.post('/mcp/call', async (req, res) => {
 
 async function analyzeAPIDocument(geminiUri, projectId, mimeType = 'application/pdf') {
   const prompt = `
-Analyze this API documentation and extract all available information.
+Analyze this API documentation and extract the information.
+Due to document size, focus only on the FIRST 50 ENDPOINTS.
 Focus on being comprehensive with ENDPOINTS but CONCISE with schemas.
 
 Extract:
-1. All API endpoints with:
+1. Up to 50 API endpoints with:
    - HTTP method
    - Path/URL
    - Brief description
-   - Essential parameters (name, type, required)
-   - Simplified response schema (only top-level fields)
+   - Essential parameters
+   - Simplified response schema
 
 2. Authentication methods:
    - Type, Header name, Format
@@ -69,7 +70,7 @@ Return as JSON:
       "path": "...",
       "description": "...",
       "parameters": [],
-      "response_schema": {"note": "Simplified for token economy"},
+      "response_schema": {"note": "Simplified"},
       "category": "...",
       "estimated_value": "high"
     }]
@@ -82,6 +83,7 @@ Return as JSON:
     config: {
       responseMimeType: 'application/json',
       maxOutputTokens: 8192,
+      temperature: 0.1,
     },
     contents: [
       {
@@ -101,12 +103,26 @@ Return as JSON:
 
   try {
     const text = result.text;
-    console.log('🤖 Gemini Response received, parsing JSON...');
+
+    // Deep Diagnostics
+    console.log('🤖 Gemini Response received!');
+    console.log('📊 Metadata:', {
+      length: text.length,
+      finishReason: result.candidates?.[0]?.finishReason,
+      usage: result.usageMetadata
+    });
+
+    if (result.candidates?.[0]?.finishReason === 'MAX_TOKENS') {
+      console.warn('⚠️ Response was truncated due to token limit (MAX_TOKENS)');
+    }
+
     return JSON.parse(text);
   } catch (parseError) {
     console.error('❌ Failed to parse Gemini response as JSON:', parseError);
-    console.error('Raw response:', result.text);
-    return { apis: [], error: 'Response parsing failed' };
+    // Don't log the whole thing if it's too big, just the end
+    const lastPart = result.text.slice(-200);
+    console.error('Last 200 characters of response:', lastPart);
+    return { apis: [], error: 'Response parsing failed', partial: lastPart };
   }
 }
 
