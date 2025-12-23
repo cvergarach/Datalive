@@ -5,7 +5,8 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { PlusCircle, Folder, MoreVertical, Calendar } from 'lucide-react';
+import { PlusCircle, Folder, MoreVertical, Calendar, Trash2 } from 'lucide-react';
+import { DeleteConfirmation } from '@/components/shared/DeleteConfirmation';
 
 interface Project {
     id: string;
@@ -22,6 +23,10 @@ export default function ProjectsPage() {
     const [newProjectName, setNewProjectName] = useState('');
     const [newProjectDesc, setNewProjectDesc] = useState('');
     const [creating, setCreating] = useState(false);
+
+    // Deletion state
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
     useEffect(() => {
         fetchProjects();
@@ -61,6 +66,12 @@ export default function ProjectsPage() {
         }
     };
 
+    const confirmDeleteProject = async () => {
+        if (!projectToDelete) return;
+        await api.delete(`/projects/${projectToDelete.id}`);
+        fetchProjects();
+    };
+
     return (
         <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
             <Sidebar />
@@ -94,15 +105,30 @@ export default function ProjectsPage() {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {projects.map((project) => (
-                                <Card key={project.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href = `/documents?project=${project.id}`}>
+                                <Card
+                                    key={project.id}
+                                    className="hover:shadow-md transition-shadow cursor-pointer relative group"
+                                    onClick={() => window.location.href = `/documents?project=${project.id}`}
+                                >
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setProjectToDelete(project);
+                                                setDeleteModalOpen(true);
+                                            }}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                     <CardHeader className="pb-2">
                                         <div className="flex justify-between items-start">
                                             <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mb-2">
                                                 <Folder className="h-5 w-5" />
                                             </div>
-                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                                <MoreVertical className="h-4 w-4" />
-                                            </Button>
                                         </div>
                                         <CardTitle className="text-lg">{project.name}</CardTitle>
                                         <CardDescription className="line-clamp-2">{project.description || 'No description'}</CardDescription>
@@ -157,6 +183,22 @@ export default function ProjectsPage() {
                             </form>
                         </Card>
                     </div>
+                )}
+
+                {/* Delete Confirmation Modal */}
+                {projectToDelete && (
+                    <DeleteConfirmation
+                        isOpen={deleteModalOpen}
+                        onClose={() => {
+                            setDeleteModalOpen(false);
+                            setProjectToDelete(null);
+                        }}
+                        onConfirm={confirmDeleteProject}
+                        title="Delete Project"
+                        entityName={projectToDelete.name}
+                        dependencyUrl={`/projects/${projectToDelete.id}/dependencies`}
+                        type="project"
+                    />
                 )}
             </div>
         </div>
