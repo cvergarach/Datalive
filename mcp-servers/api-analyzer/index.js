@@ -41,39 +41,36 @@ app.post('/mcp/call', async (req, res) => {
 
 async function analyzeAPIDocument(geminiUri, projectId, mimeType = 'application/pdf') {
   const prompt = `
-Analyze this API documentation and extract:
+Analyze this API documentation and extract all available information.
+Focus on being comprehensive with ENDPOINTS but CONCISE with schemas.
 
+Extract:
 1. All API endpoints with:
-   - HTTP method (GET, POST, PUT, DELETE, etc.)
+   - HTTP method
    - Path/URL
-   - Description
-   - Parameters (name, type, required, description)
-   - Response schema
+   - Brief description
+   - Essential parameters (name, type, required)
+   - Simplified response schema (only top-level fields)
 
 2. Authentication methods:
-   - Type (Bearer, API Key, OAuth, Basic, etc.)
-   - Header name
-   - Format
+   - Type, Header name, Format
 
-3. Base URL of the API
+3. Base URL and API metadata.
 
-4. API name and description
-
-Return as JSON with this structure:
+Return as JSON:
 {
   "apis": [{
-    "name": "API Name",
-    "description": "Description",
-    "base_url": "https://api.example.com",
-    "auth_type": "bearer",
-    "auth_details": {},
+    "name": "...",
+    "description": "...",
+    "base_url": "...",
+    "auth_type": "...",
     "endpoints": [{
-      "method": "GET",
-      "path": "/endpoint",
+      "method": "...",
+      "path": "...",
       "description": "...",
       "parameters": [],
-      "response_schema": {},
-      "category": "data_fetch",
+      "response_schema": {"note": "Simplified for token economy"},
+      "category": "...",
       "estimated_value": "high"
     }]
   }]
@@ -84,6 +81,7 @@ Return as JSON with this structure:
     model: modelName,
     config: {
       responseMimeType: 'application/json',
+      maxOutputTokens: 8192,
     },
     contents: [
       {
