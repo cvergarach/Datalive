@@ -40,49 +40,80 @@ app.post('/mcp/call', async (req, res) => {
 });
 
 async function analyzeAPIDocument(geminiUri, projectId, mimeType = 'application/pdf') {
-  const prompt = `You are an API documentation analyzer. Extract ALL API endpoints and information from this document.
+  const prompt = `You are an expert API documentation analyzer. Your ONLY job is to find and extract API endpoints.
 
-IMPORTANT: Look for:
-1. **Base URL**: Usually starts with https://api. or http://
-2. **Endpoints**: Paths starting with / (like /v1/customers, /charges, /payments)
-3. **HTTP Methods**: GET, POST, PUT, DELETE, PATCH
-4. **Authentication**: API keys, Bearer tokens, OAuth, etc.
+STEP 1: Find the Base URL
+Look for patterns like:
+- "https://api.stripe.com"
+- "Base URL: https://api.example.com"
+- In curl examples: curl https://api.stripe.com/v1/charges
 
-Common patterns in documentation:
-- Endpoints often appear in code examples (curl commands, SDK examples)
-- Look for "POST /v1/...", "GET /v1/...", etc.
-- Check sections titled: "API Reference", "Endpoints", "Resources", "Methods"
-- Parameters are usually in tables or lists
+STEP 2: Find ALL Endpoints
+Endpoints look like this in documentation:
+- "POST /v1/customers" 
+- "GET /v1/charges/:id"
+- "DELETE /v1/subscriptions/{subscription_id}"
+- curl -X POST https://api.stripe.com/v1/payment_intents
+- stripe.customers.create() → maps to POST /v1/customers
+- stripe.charges.retrieve(id) → maps to GET /v1/charges/:id
 
-Return JSON in this EXACT format:
+WHERE TO LOOK:
+1. Section titles: "API Reference", "Endpoints", "Resources", "REST API"
+2. Code examples (curl, Python, JavaScript, Ruby)
+3. Tables with "Method" and "Endpoint" columns
+4. Lists of operations like "Create a customer", "Retrieve a charge"
+
+EXAMPLE INPUT:
+"Create a customer: POST /v1/customers
+Retrieve a customer: GET /v1/customers/:id
+List all customers: GET /v1/customers"
+
+EXAMPLE OUTPUT:
 {
   "apis": [{
-    "name": "API Name (e.g., Stripe API)",
-    "description": "Brief description of what this API does",
-    "base_url": "https://api.example.com",
-    "auth_type": "api_key",
-    "auth_details": {"header_name": "Authorization", "format": "Bearer TOKEN", "guide": "How to get API key"},
-    "execution_strategy": "How to use this API effectively",
-    "endpoints": [{
-      "method": "GET",
-      "path": "/v1/resource",
-      "description": "What this endpoint does",
-      "parameters": [{"name": "param", "type": "string", "required": true, "description": "Parameter description"}],
-      "response_schema": {"example": "response structure"},
-      "category": "data_fetch",
-      "estimated_value": "high",
-      "execution_steps": "Step-by-step how to call this endpoint"
-    }]
+    "name": "Stripe API",
+    "base_url": "https://api.stripe.com",
+    "endpoints": [
+      {"method": "POST", "path": "/v1/customers", "description": "Create a customer"},
+      {"method": "GET", "path": "/v1/customers/:id", "description": "Retrieve a customer"},
+      {"method": "GET", "path": "/v1/customers", "description": "List all customers"}
+    ]
   }]
 }
 
-CRITICAL: 
-- Extract EVERY endpoint you find, even if there are many
-- If you see curl examples, extract the endpoint from them
-- Don't return empty endpoints array unless there are truly NO API endpoints
-- Look carefully through ALL the content
+RETURN FORMAT (STRICT JSON):
+{
+  "apis": [{
+    "name": "API Name",
+    "description": "What this API does",
+    "base_url": "https://api.example.com",
+    "auth_type": "api_key",
+    "auth_details": {"header_name": "Authorization", "format": "Bearer TOKEN"},
+    "execution_strategy": "How to use this API",
+    "endpoints": [
+      {
+        "method": "GET|POST|PUT|DELETE|PATCH",
+        "path": "/v1/resource",
+        "description": "What this endpoint does",
+        "parameters": [{"name": "id", "type": "string", "required": true}],
+        "response_schema": {},
+        "category": "data_fetch",
+        "estimated_value": "high",
+        "execution_steps": "How to call it"
+      }
+    ]
+  }]
+}
 
-Return {"apis": []} ONLY if absolutely no API information exists.`;
+CRITICAL RULES:
+1. You MUST extract at least 5-10 endpoints if they exist
+2. If you see "Create", "Retrieve", "Update", "Delete", "List" → those are endpoints
+3. Look for HTTP methods (GET, POST, PUT, DELETE, PATCH) followed by paths
+4. Check EVERY code example for endpoint paths
+5. DO NOT return empty endpoints:[] unless there are ZERO API endpoints in the entire document
+
+NOW ANALYZE THE DOCUMENT AND EXTRACT ALL ENDPOINTS.`;
+
 
 
   const result = await client.models.generateContent({
