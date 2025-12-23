@@ -40,44 +40,56 @@ app.post('/mcp/call', async (req, res) => {
 });
 
 async function analyzeAPIDocument(geminiUri, projectId, mimeType = 'application/pdf') {
-  const prompt = `Extract API information from this document. Return ONLY valid JSON.
+  const prompt = `You are an API documentation analyzer. Extract ALL API endpoints and information from this document.
 
-Find:
-- Base URL (https://api.example.com)
-- All endpoints (/path)
-- HTTP methods (GET, POST, etc.)
-- Authentication (API key, Bearer, etc.)
+IMPORTANT: Look for:
+1. **Base URL**: Usually starts with https://api. or http://
+2. **Endpoints**: Paths starting with / (like /v1/customers, /charges, /payments)
+3. **HTTP Methods**: GET, POST, PUT, DELETE, PATCH
+4. **Authentication**: API keys, Bearer tokens, OAuth, etc.
 
-JSON format:
+Common patterns in documentation:
+- Endpoints often appear in code examples (curl commands, SDK examples)
+- Look for "POST /v1/...", "GET /v1/...", etc.
+- Check sections titled: "API Reference", "Endpoints", "Resources", "Methods"
+- Parameters are usually in tables or lists
+
+Return JSON in this EXACT format:
 {
   "apis": [{
-    "name": "API Name",
-    "description": "What it does",
+    "name": "API Name (e.g., Stripe API)",
+    "description": "Brief description of what this API does",
     "base_url": "https://api.example.com",
     "auth_type": "api_key",
-    "auth_details": {"header_name": "ticket", "format": "ticket=VALUE", "guide": "How to get it"},
-    "execution_strategy": "How to use it",
+    "auth_details": {"header_name": "Authorization", "format": "Bearer TOKEN", "guide": "How to get API key"},
+    "execution_strategy": "How to use this API effectively",
     "endpoints": [{
       "method": "GET",
       "path": "/v1/resource",
-      "description": "What it returns",
-      "parameters": [{"name": "param", "type": "string", "required": true, "description": "..."}],
-      "response_schema": {"note": "Response structure"},
+      "description": "What this endpoint does",
+      "parameters": [{"name": "param", "type": "string", "required": true, "description": "Parameter description"}],
+      "response_schema": {"example": "response structure"},
       "category": "data_fetch",
       "estimated_value": "high",
-      "execution_steps": "How to call it"
+      "execution_steps": "Step-by-step how to call this endpoint"
     }]
   }]
 }
 
-Return {"apis": []} if no APIs found.`;
+CRITICAL: 
+- Extract EVERY endpoint you find, even if there are many
+- If you see curl examples, extract the endpoint from them
+- Don't return empty endpoints array unless there are truly NO API endpoints
+- Look carefully through ALL the content
+
+Return {"apis": []} ONLY if absolutely no API information exists.`;
 
 
   const result = await client.models.generateContent({
     model: modelName,
     config: {
       maxOutputTokens: 16384, // Increased to prevent truncation
-      temperature: 0.1 // Low but not zero to allow some creativity
+      temperature: 0.2 // Slightly higher to encourage finding more endpoints
     },
     contents: [
       {
