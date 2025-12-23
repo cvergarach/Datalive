@@ -26,6 +26,19 @@ export const checkProjectAccess = async (req, res, next) => {
     const { projectId } = req.params;
     const userId = req.user.id;
 
+    // 1. Check if user is the Owner directly (fastest/most authoritative)
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('owner_id')
+      .eq('id', projectId)
+      .single();
+
+    if (!projectError && project && project.owner_id === userId) {
+      req.projectRole = 'owner';
+      return next();
+    }
+
+    // 2. Fallback: Check membership table
     const { data: membership, error } = await supabase
       .from('project_members')
       .select('role')
