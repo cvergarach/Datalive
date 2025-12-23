@@ -1,6 +1,6 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
-const TurndownService = require('turndown');
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+import TurndownService from 'turndown';
 
 const turndownService = new TurndownService({
     headingStyle: 'atx',
@@ -120,7 +120,4 @@ function isValidUrl(string) {
     }
 }
 
-module.exports = {
-    scrapeWebContent,
-    isValidUrl
-};
+export { scrapeWebContent, isValidUrl };
