@@ -24,17 +24,18 @@ class GeminiService {
   async uploadFile(filePath, displayName = null) {
     try {
       const fileName = displayName || path.basename(filePath);
+      console.log(`📂 Leyendo archivo para subir: ${filePath}`);
       const fileData = fs.readFileSync(filePath);
 
       const uploadResult = await client.files.upload({
         file: {
-          data: fileData,
+          data: fileData.toString('base64'),
           mimeType: this.getMimeType(filePath),
         },
         config: { displayName: fileName }
       });
 
-      console.log(`✅ File uploaded to Gemini: ${uploadResult.uri}`);
+      console.log(`✅ Archivo subido a Gemini: ${uploadResult.uri}`);
 
       return {
         uri: uploadResult.uri,
@@ -44,8 +45,11 @@ class GeminiService {
         sizeBytes: uploadResult.sizeBytes
       };
     } catch (error) {
-      console.error('Error uploading file to Gemini:', error);
-      throw new Error(`Failed to upload file: ${error.message}`);
+      console.error('❌ Error de subida en Gemini SDK:', error);
+      if (error.response) {
+        console.error('Detalles del error (response):', JSON.stringify(error.response, null, 2));
+      }
+      throw new Error(`Error en el SDK de Gemini al subir: ${error.message}`);
     }
   }
 
