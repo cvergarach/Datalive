@@ -1,9 +1,11 @@
 'use client';
-import { signIn } from 'next-auth/react';
 import { ArrowRight, Zap, Database, TrendingUp, Shield, Globe, Sparkles } from 'lucide-react';
-import Image from 'next/image';
 
 export default function LandingPage() {
+  const handleSignIn = () => {
+    window.location.href = '/login';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       {/* Navigation */}
@@ -17,7 +19,7 @@ export default function LandingPage() {
               <span className="text-2xl font-bold text-white">DataLive</span>
             </div>
             <button
-              onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+              onClick={handleSignIn}
               className="px-6 py-2 bg-white text-slate-900 rounded-lg font-semibold hover:bg-slate-100 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               Sign In
@@ -48,7 +50,7 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+                onClick={handleSignIn}
                 className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 shadow-2xl hover:shadow-blue-500/50 flex items-center justify-center space-x-2"
               >
                 <svg className="w-6 h-6" viewBox="0 0 24 24">
@@ -160,7 +162,7 @@ export default function LandingPage() {
             Join developers who are already using DataLive to streamline their API integration process.
           </p>
           <button
-            onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+            onClick={handleSignIn}
             className="group px-10 py-5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 shadow-2xl hover:shadow-blue-500/50 inline-flex items-center space-x-3"
           >
             <svg className="w-6 h-6" viewBox="0 0 24 24">
