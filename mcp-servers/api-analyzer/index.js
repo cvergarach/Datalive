@@ -82,6 +82,9 @@ Return as JSON with this structure:
 
   const result = await client.models.generateContent({
     model: modelName,
+    config: {
+      responseMimeType: 'application/json',
+    },
     contents: [
       {
         role: 'user',
@@ -98,14 +101,15 @@ Return as JSON with this structure:
     ]
   });
 
-  const text = result.text;
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-
-  if (jsonMatch) {
-    return JSON.parse(jsonMatch[0]);
+  try {
+    const text = result.text;
+    console.log('🤖 Gemini Response received, parsing JSON...');
+    return JSON.parse(text);
+  } catch (parseError) {
+    console.error('❌ Failed to parse Gemini response as JSON:', parseError);
+    console.error('Raw response:', result.text);
+    return { apis: [], error: 'Response parsing failed' };
   }
-
-  return { apis: [] };
 }
 
 async function extractEndpoints(geminiUri) {
