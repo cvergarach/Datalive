@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/utils/cn';
@@ -17,8 +18,11 @@ import {
   Settings,
   Users,
   LogOut,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import Image from 'next/image';
 
 interface NavItem {
   name: string;
@@ -47,12 +51,12 @@ const adminNavigation: NavItem[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  return (
-    <div className="flex h-screen w-64 flex-col bg-gray-900 text-white">
+  const SidebarContent = () => (
+    <>
       <div className="flex h-16 items-center px-6 border-b border-gray-800 gap-2">
-        <h1 className="text-xl font-bold">DataLive</h1>
-        <img src="/logo-icon.png" alt="DataLive Logo" className="h-6 w-auto" />
+        <Image src="/logo-full.png" alt="DataLive" width={140} height={32} className="h-8 w-auto" priority />
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
@@ -63,6 +67,7 @@ export function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
                 className={cn(
                   'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                   isActive
@@ -89,6 +94,7 @@ export function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
                 className={cn(
                   'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                   isActive
@@ -121,6 +127,43 @@ export function Sidebar() {
           Sign Out
         </button>
       </div>
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile menu button */}
+      <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-gray-900 text-white hover:bg-gray-800 transition-colors"
+      >
+        {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      </button>
+
+      {/* Mobile sidebar overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile sidebar */}
+      <div
+        className={cn(
+          'lg:hidden fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out',
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
+        <div className="flex h-screen flex-col">
+          <SidebarContent />
+        </div>
+      </div>
+
+      {/* Desktop sidebar */}
+      <div className="hidden lg:flex h-screen w-64 flex-col bg-gray-900 text-white">
+        <SidebarContent />
+      </div>
+    </>
   );
 }

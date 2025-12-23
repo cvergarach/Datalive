@@ -47,8 +47,8 @@ export default function DashboardPage() {
       <Sidebar />
       <div className="flex-1 overflow-auto">
         <Header title="Dashboard" subtitle="Overview of your DataLive workspace" />
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="p-4 sm:p-6 pt-16 lg:pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
             {(data?.stats || []).map((stat: any) => {
               const Icon = getIcon(stat.icon);
               return (
