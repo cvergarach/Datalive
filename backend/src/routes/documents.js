@@ -81,7 +81,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
     // 5. Start async analysis with MCP
     console.log('🤖 Starting API analysis...');
-    mcpClient.analyzeAPIDocument(geminiFile.uri, projectId)
+    mcpClient.analyzeAPIDocument(geminiFile.uri, projectId, geminiFile.mimeType)
       .then(async (analysis) => {
         console.log('✅ Analysis complete');
 
@@ -132,7 +132,10 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         console.error('Error in API analysis:', error);
         await supabaseAdmin
           .from('api_documents')
-          .update({ status: 'error' })
+          .update({
+            status: 'error',
+            error_message: error.message
+          })
           .eq('id', document.id);
       });
 

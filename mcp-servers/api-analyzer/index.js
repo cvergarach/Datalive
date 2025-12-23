@@ -18,7 +18,7 @@ app.post('/mcp/call', async (req, res) => {
     const { tool, params } = req.body;
 
     if (tool === 'analyze_api_document') {
-      const result = await analyzeAPIDocument(params.gemini_uri, params.project_id);
+      const result = await analyzeAPIDocument(params.gemini_uri, params.project_id, params.mime_type);
       return res.json(result);
     }
 
@@ -92,7 +92,7 @@ Return as JSON with this structure:
 
   const text = result.response.text();
   const jsonMatch = text.match(/\{[\s\S]*\}/);
-  
+
   if (jsonMatch) {
     return JSON.parse(jsonMatch[0]);
   }

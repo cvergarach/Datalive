@@ -17,13 +17,16 @@ class MCPClient {
 
   async call(serverName, tool, params = {}) {
     const serverUrl = this.servers[serverName];
-    
+
     if (!serverUrl) {
       throw new Error(`MCP server '${serverName}' not configured`);
     }
 
+    const targetUrl = `${serverUrl}/mcp/call`;
+    console.log(`📡 Calling MCP: ${targetUrl} (tool: ${tool})`);
+
     try {
-      const response = await axios.post(`${serverUrl}/mcp/call`, {
+      const response = await axios.post(targetUrl, {
         tool,
         params
       }, {
@@ -35,16 +38,21 @@ class MCPClient {
 
       return response.data;
     } catch (error) {
-      console.error(`Error calling MCP ${serverName}.${tool}:`, error.message);
+      console.error(`❌ Error calling MCP ${serverName}.${tool}:`, error.message);
+      if (error.response) {
+        console.error(`Status: ${error.response.status}`);
+        console.error(`Data:`, error.response.data);
+      }
       throw new Error(`MCP call failed: ${error.message}`);
     }
   }
 
   // API Analyzer Methods
-  async analyzeAPIDocument(geminiUri, projectId) {
+  async analyzeAPIDocument(geminiUri, projectId, mimeType) {
     return this.call('apiAnalyzer', 'analyze_api_document', {
       gemini_uri: geminiUri,
-      project_id: projectId
+      project_id: projectId,
+      mime_type: mimeType
     });
   }
 
