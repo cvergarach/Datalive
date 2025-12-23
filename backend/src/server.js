@@ -15,6 +15,7 @@ import dashboardsRoutes from './routes/dashboards.js';
 import reportsRoutes from './routes/reports.js';
 import integrationsRoutes from './routes/integrations.js';
 import webhooksRoutes from './routes/webhooks.js';
+import statsRoutes from './routes/stats.js';
 
 dotenv.config();
 
@@ -78,6 +79,7 @@ app.use('/api/projects/:projectId/dashboards', dashboardsRoutes);
 app.use('/api/projects/:projectId/reports', reportsRoutes);
 app.use('/api/projects/:projectId/integrations', integrationsRoutes);
 app.use('/api/webhooks', webhooksRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {
