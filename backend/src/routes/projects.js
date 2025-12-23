@@ -85,7 +85,7 @@ router.get('/:id', async (req, res) => {
     const userId = req.user.id;
 
     // Check user has access
-    const { data: membership, error: memberError } = await supabase
+    const { data: membership, error: memberError } = await supabaseAdmin
       .from('project_members')
       .select('role')
       .eq('project_id', id)
@@ -97,7 +97,7 @@ router.get('/:id', async (req, res) => {
     }
 
     // Get project
-    const { data: project, error } = await supabase
+    const { data: project, error } = await supabaseAdmin
       .from('projects')
       .select('*')
       .eq('id', id)
@@ -122,7 +122,7 @@ router.put('/:id', async (req, res) => {
     const userId = req.user.id;
 
     // Check user is owner or admin
-    const { data: membership, error: memberError } = await supabase
+    const { data: membership, error: memberError } = await supabaseAdmin
       .from('project_members')
       .select('role')
       .eq('project_id', id)
@@ -134,7 +134,7 @@ router.put('/:id', async (req, res) => {
     }
 
     // Update project
-    const { data: project, error } = await supabase
+    const { data: project, error } = await supabaseAdmin
       .from('projects')
       .update({ name, description })
       .eq('id', id)
@@ -159,7 +159,7 @@ router.delete('/:id', async (req, res) => {
     const userId = req.user.id;
 
     // Check user is owner
-    const { data: project, error: projectError } = await supabase
+    const { data: project, error: projectError } = await supabaseAdmin
       .from('projects')
       .select('owner_id')
       .eq('id', id)
@@ -170,7 +170,7 @@ router.delete('/:id', async (req, res) => {
     }
 
     // Delete project (cascades to members, documents, etc.)
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('projects')
       .delete()
       .eq('id', id);

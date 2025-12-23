@@ -1,5 +1,5 @@
 import express from 'express';
-import { supabase } from '../config/supabase.js';
+import { supabase, supabaseAdmin } from '../config/supabase.js';
 import mcpClient from '../services/mcp-client.js';
 import { authMiddleware, checkProjectAccess } from '../middleware/auth.js';
 
@@ -10,7 +10,7 @@ router.use(checkProjectAccess);
 router.get('/', async (req, res) => {
   try {
     const { projectId } = req.params;
-    const { data: insights, error } = await supabase
+    const { data: insights, error } = await supabaseAdmin
       .from('insights')
       .select('*')
       .eq('project_id', projectId)

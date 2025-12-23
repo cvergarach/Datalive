@@ -1,5 +1,5 @@
 import express from 'express';
-import { supabase } from '../config/supabase.js';
+import { supabase, supabaseAdmin } from '../config/supabase.js';
 import { authMiddleware, checkProjectAccess } from '../middleware/auth.js';
 
 const router = express.Router({ mergeParams: true });
@@ -9,7 +9,7 @@ router.use(checkProjectAccess);
 router.get('/', async (req, res) => {
   try {
     const { projectId } = req.params;
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('api_data')
       .select('*, api_endpoints(method, path), discovered_apis(name)')
       .eq('project_id', projectId)

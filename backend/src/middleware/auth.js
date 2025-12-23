@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase.js';
+import { supabase, supabaseAdmin } from '../config/supabase.js';
 
 export const authMiddleware = async (req, res, next) => {
   try {
@@ -27,7 +27,8 @@ export const checkProjectAccess = async (req, res, next) => {
     const userId = req.user.id;
 
     // 1. Check if user is the Owner directly (fastest/most authoritative)
-    const { data: project, error: projectError } = await supabase
+    // Use admin client to bypass RLS for this internal check
+    const { data: project, error: projectError } = await supabaseAdmin
       .from('projects')
       .select('owner_id')
       .eq('id', projectId)
@@ -39,7 +40,7 @@ export const checkProjectAccess = async (req, res, next) => {
     }
 
     // 2. Fallback: Check membership table
-    const { data: membership, error } = await supabase
+    const { data: membership, error } = await supabaseAdmin
       .from('project_members')
       .select('role')
       .eq('project_id', projectId)

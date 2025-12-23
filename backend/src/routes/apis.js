@@ -1,5 +1,5 @@
 import express from 'express';
-import { supabase } from '../config/supabase.js';
+import { supabase, supabaseAdmin } from '../config/supabase.js';
 import mcpClient from '../services/mcp-client.js';
 import { authMiddleware, checkProjectAccess } from '../middleware/auth.js';
 
@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
   try {
     const { projectId } = req.params;
 
-    const { data: apis, error } = await supabase
+    const { data: apis, error } = await supabaseAdmin
       .from('discovered_apis')
       .select(`
         *,
@@ -41,7 +41,7 @@ router.get('/:apiId', async (req, res) => {
   try {
     const { projectId, apiId } = req.params;
 
-    const { data: api, error } = await supabase
+    const { data: api, error } = await supabaseAdmin
       .from('discovered_apis')
       .select(`
         *,
@@ -70,7 +70,7 @@ router.post('/:apiId/configure', async (req, res) => {
     const { credentials } = req.body;
 
     // Get API info
-    const { data: api, error: apiError } = await supabase
+    const { data: api, error: apiError } = await supabaseAdmin
       .from('discovered_apis')
       .select('base_url, auth_type')
       .eq('id', apiId)
@@ -85,7 +85,7 @@ router.post('/:apiId/configure', async (req, res) => {
     });
 
     // Save configuration
-    const { data: config, error: configError } = await supabase
+    const { data: config, error: configError } = await supabaseAdmin
       .from('api_configurations')
       .upsert({
         api_id: apiId,
@@ -121,7 +121,7 @@ router.post('/:apiId/execute', async (req, res) => {
     const { endpoint_ids } = req.body; // Array of endpoint IDs to execute
 
     // Get API config
-    const { data: config, error: configError } = await supabase
+    const { data: config, error: configError } = await supabaseAdmin
       .from('api_configurations')
       .select('credentials, discovered_apis(base_url, auth_type)')
       .eq('api_id', apiId)
@@ -133,7 +133,7 @@ router.post('/:apiId/execute', async (req, res) => {
     }
 
     // Get endpoints
-    const { data: endpoints, error: endpointsError } = await supabase
+    const { data: endpoints, error: endpointsError } = await supabaseAdmin
       .from('api_endpoints')
       .select('*')
       .eq('api_id', apiId)
@@ -166,7 +166,7 @@ router.post('/:apiId/execute', async (req, res) => {
       status: result.success ? 'success' : 'error'
     }));
 
-    const { data: savedData, error: dataError } = await supabase
+    const { data: savedData, error: dataError } = await supabaseAdmin
       .from('api_data')
       .insert(dataToInsert)
       .select();

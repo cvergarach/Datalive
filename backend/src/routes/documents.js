@@ -74,7 +74,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     await geminiService.waitForFileActive(geminiFile.name);
 
     // 4. Update status to analyzed
-    await supabase
+    await supabaseAdmin
       .from('api_documents')
       .update({ status: 'analyzed' })
       .eq('id', document.id);
@@ -88,7 +88,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         // Save discovered APIs
         if (analysis.apis && analysis.apis.length > 0) {
           for (const api of analysis.apis) {
-            const { data: savedApi } = await supabase
+            const { data: savedApi } = await supabaseAdmin
               .from('discovered_apis')
               .insert({
                 project_id: projectId,
@@ -115,7 +115,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
                 estimated_value: ep.estimated_value
               }));
 
-              await supabase
+              await supabaseAdmin
                 .from('api_endpoints')
                 .insert(endpointsToInsert);
             }
@@ -123,14 +123,14 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         }
 
         // Update document status
-        await supabase
+        await supabaseAdmin
           .from('api_documents')
           .update({ status: 'completed' })
           .eq('id', document.id);
       })
       .catch(async (error) => {
         console.error('Error in API analysis:', error);
-        await supabase
+        await supabaseAdmin
           .from('api_documents')
           .update({ status: 'error' })
           .eq('id', document.id);
@@ -167,7 +167,7 @@ router.get('/', async (req, res) => {
   try {
     const { projectId } = req.params;
 
-    const { data: documents, error } = await supabase
+    const { data: documents, error } = await supabaseAdmin
       .from('api_documents')
       .select('*')
       .eq('project_id', projectId)
@@ -189,7 +189,7 @@ router.get('/:documentId', async (req, res) => {
   try {
     const { projectId, documentId } = req.params;
 
-    const { data: document, error } = await supabase
+    const { data: document, error } = await supabaseAdmin
       .from('api_documents')
       .select('*')
       .eq('id', documentId)
@@ -213,7 +213,7 @@ router.delete('/:documentId', async (req, res) => {
     const { projectId, documentId } = req.params;
 
     // Get document info
-    const { data: document, error: fetchError } = await supabase
+    const { data: document, error: fetchError } = await supabaseAdmin
       .from('api_documents')
       .select('gemini_name')
       .eq('id', documentId)
@@ -230,7 +230,7 @@ router.delete('/:documentId', async (req, res) => {
     }
 
     // Delete from database
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await supabaseAdmin
       .from('api_documents')
       .delete()
       .eq('id', documentId);
