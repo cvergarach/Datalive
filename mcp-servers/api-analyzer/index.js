@@ -127,17 +127,20 @@ OUTPUT FORMAT (JSON MUST BE VALID):
       return JSON.parse(text);
     } catch (innerError) {
       console.error('❌ First JSON parse failed, attempting fuzzy clean...');
+      console.log('📝 First 1000 chars of response:', text.slice(0, 1000));
       // Try to find first { and last }
       const start = text.indexOf('{');
       const end = text.lastIndexOf('}');
       if (start !== -1 && end !== -1) {
         text = text.slice(start, end + 1);
+        console.log('🔧 Attempting to parse extracted JSON...');
         return JSON.parse(text);
       }
       throw innerError;
     }
   } catch (parseError) {
     console.error('❌ Failed to parse Gemini response as JSON:', parseError);
+    console.log('📝 Full response preview (first 1000 chars):', (result.text || '').slice(0, 1000));
     return {
       apis: [],
       error: 'API extraction failed to produce valid data. The document might not contain recognizable API endpoints or the format was too complex.',
