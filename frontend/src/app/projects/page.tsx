@@ -113,7 +113,7 @@ export default function ProjectsPage() {
                                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                                         <Button
                                             variant="ghost"
-                                            size="icon"
+                                            size="sm"
                                             className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
                                             onClick={(e) => {
                                                 e.stopPropagation();

@@ -112,7 +112,7 @@ export function DeleteConfirmation({
                         Cancel
                     </Button>
                     <Button
-                        variant="destructive"
+                        variant="danger"
                         onClick={handleConfirm}
                         disabled={deleting || (loading && !dependencies)}
                         className="bg-red-600 hover:bg-red-700 text-white"

@@ -181,7 +181,7 @@ export default function DocumentsPage() {
                                                     </span>
                                                     <Button
                                                         variant="ghost"
-                                                        size="icon"
+                                                        size="sm"
                                                         className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
                                                         onClick={() => {
                                                             setDocToDelete(doc);
@@ -217,10 +217,6 @@ export default function DocumentsPage() {
                 )}
             </div>
         </div>
-    );
-}
-            </div >
-        </div >
     );
 }
 
