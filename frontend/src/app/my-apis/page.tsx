@@ -17,7 +17,8 @@ import {
     Search,
     CheckCircle2,
     AlertCircle,
-    Plus
+    Plus,
+    Lightbulb
 } from 'lucide-react';
 import { ConfigureApiModal } from '@/components/shared/ConfigureApiModal';
 
@@ -188,9 +189,37 @@ export default function APIsPage() {
                                             </div>
 
                                             {apiItem.description && (
-                                                <p className="mt-4 text-sm text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                                <p className="mt-4 text-sm text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-100 italic">
                                                     {apiItem.description}
                                                 </p>
+                                            )}
+
+                                            {/* Actionable Intelligence Section */}
+                                            {(apiItem.execution_strategy || apiItem.auth_details?.guide) && (
+                                                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    {apiItem.execution_strategy && (
+                                                        <div className="bg-amber-50/50 border border-amber-100 rounded-lg p-3">
+                                                            <div className="flex items-center gap-2 text-amber-700 font-bold text-xs uppercase tracking-wider mb-2">
+                                                                <Lightbulb className="h-3.5 w-3.5" />
+                                                                Execution Strategy
+                                                            </div>
+                                                            <p className="text-sm text-amber-900 leading-relaxed">
+                                                                {apiItem.execution_strategy}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    {apiItem.auth_details?.guide && (
+                                                        <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3">
+                                                            <div className="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-wider mb-2">
+                                                                <Shield className="h-3.5 w-3.5" />
+                                                                Auth Setup Guide
+                                                            </div>
+                                                            <p className="text-sm text-blue-900 leading-relaxed">
+                                                                {apiItem.auth_details.guide}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
 
@@ -232,7 +261,17 @@ export default function APIsPage() {
                                                                             </span>
                                                                         </td>
                                                                         <td className="px-6 py-4 font-mono text-xs">{ep.path}</td>
-                                                                        <td className="px-6 py-4 text-gray-600">{ep.description}</td>
+                                                                        <td className="px-6 py-4">
+                                                                            <div className="space-y-1">
+                                                                                <p className="text-gray-900 font-medium">{ep.description}</p>
+                                                                                {ep.execution_steps && (
+                                                                                    <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 p-1.5 rounded border border-primary/10">
+                                                                                        <Zap className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                                                                                        <span>{ep.execution_steps}</span>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </td>
                                                                         <td className="px-6 py-4">
                                                                             <span className="flex items-center text-amber-600 font-bold">
                                                                                 <Zap className="h-3 w-3 mr-1" /> {ep.estimated_value}

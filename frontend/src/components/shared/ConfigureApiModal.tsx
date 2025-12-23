@@ -15,6 +15,9 @@ interface ConfigureApiModalProps {
         name: string;
         auth_type: string;
         base_url: string;
+        auth_details?: {
+            guide?: string;
+        };
     };
 }
 
@@ -109,6 +112,15 @@ export function ConfigureApiModal({
                         </div>
                     </div>
 
+                    {apiItem.auth_details?.guide && (
+                        <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Guide</p>
+                            <p className="text-xs text-gray-600 leading-relaxed italic">
+                                {apiItem.auth_details.guide}
+                            </p>
+                        </div>
+                    )}
+
                     {renderAuthFields()}
 
                     {error && (
@@ -134,7 +146,7 @@ export function ConfigureApiModal({
                     </Button>
                     <Button
                         onClick={handleConfigure}
-                        disabled={loading || (!credentials.key && apiItem.auth_type !== 'none')}
+                        disabled={loading || (!credentials.api_key && apiItem.auth_type !== 'none')}
                     >
                         {loading ? (
                             <>

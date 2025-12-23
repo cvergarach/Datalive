@@ -61,9 +61,12 @@ CREATE TABLE discovered_apis (
   name TEXT NOT NULL,
   description TEXT,
   
-  -- Authentication
+  -- Authentication intelligence
   auth_type TEXT, -- bearer, api_key, oauth, basic, none
-  auth_details JSONB, -- Extra auth info extracted
+  auth_details JSONB, -- {header_name, format, guide}
+  
+  -- Actionable intelligence
+  execution_strategy TEXT,
   
   discovered_at TIMESTAMP DEFAULT NOW()
 );
@@ -80,9 +83,10 @@ CREATE TABLE api_endpoints (
   parameters JSONB, -- [{name, type, required, description}]
   response_schema JSONB,
   
-  -- Categorization
+  -- Categorization & Execution
   category TEXT, -- data_fetch, mutation, analytics, etc.
   estimated_value TEXT, -- high, medium, low
+  execution_steps TEXT, -- Actionable steps for this specific endpoint
   
   created_at TIMESTAMP DEFAULT NOW()
 );

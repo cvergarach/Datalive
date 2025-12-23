@@ -98,7 +98,8 @@ router.post('/upload', upload.single('file'), async (req, res) => {
                 name: api.name,
                 description: api.description,
                 auth_type: api.auth_type,
-                auth_details: api.auth_details
+                auth_details: api.auth_details,
+                execution_strategy: api.execution_strategy
               })
               .select()
               .single();
@@ -107,13 +108,15 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             if (api.endpoints && savedApi) {
               const endpointsToInsert = api.endpoints.map(ep => ({
                 api_id: savedApi.id,
+                project_id: projectId,
                 method: ep.method,
                 path: ep.path,
                 description: ep.description,
                 parameters: ep.parameters,
                 response_schema: ep.response_schema,
                 category: ep.category,
-                estimated_value: ep.estimated_value
+                estimated_value: ep.estimated_value,
+                execution_steps: ep.execution_steps
               }));
 
               await supabaseAdmin

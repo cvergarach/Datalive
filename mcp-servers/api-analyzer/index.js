@@ -41,41 +41,47 @@ app.post('/mcp/call', async (req, res) => {
 
 async function analyzeAPIDocument(geminiUri, projectId, mimeType = 'application/pdf') {
   const prompt = `
-Analyze this API documentation and extract the information.
-Due to document size, focus only on the FIRST 50 ENDPOINTS.
-Focus on being comprehensive with ENDPOINTS but CONCISE with schemas.
+Act as an expert API Architect and Security Researcher. Your goal is to DISCOVER and ANALYZE all consumable endpoints in this documentation to enable automated data extraction.
 
-Extract:
-1. Up to 50 API endpoints with:
-   - HTTP method
-   - Path/URL
-   - Brief description
-   - Essential parameters
-   - Simplified response schema
+INSTRUCTIONS:
+1. DOCUMENT REVIEW: Scan the entire document to find ALL distinct APIs.
+2. AUTHENTICATION INTELLIGENCE: 
+   - Identify EXACTLY how to authenticate (Auth Type, Header Name, Token Format).
+   - Provide a "Auth Setup Guide" for humans (e.g., "Go to dashboard -> Keys -> Copy API Key").
+3. ENDPOINT DISCOVERY:
+   - Find ALL consumable endpoints, especially those returning data (GET), Search, or Analytics.
+   - For EACH endpoint, devise a "Execution Plan": specific sequence of calls or parameter requirements to get data successfully.
+4. ACTIONABLE INTELLIGENCE:
+   - Categorize by business value (e.g., Inventory, Pricing, Customers).
+   - Identify dependencies between endpoints (e.g., "Must call /login first to get token").
 
-2. Authentication methods:
-   - Type, Header name, Format
-
-3. Base URL and API metadata.
-
-Return as JSON:
+OUTPUT FORMAT (JSON ONLY):
 {
   "apis": [{
-    "name": "...",
-    "description": "...",
-    "base_url": "...",
-    "auth_type": "...",
+    "name": "Professional name of the API",
+    "description": "Comprehensive summary of capabilities",
+    "base_url": "e.g., https://api.example.com/v1",
+    "auth_type": "bearer | api_key | oauth | basic | none",
+    "auth_details": {
+      "header_name": "Authorization",
+      "format": "Bearer <token>",
+      "guide": "Step-by-step instructions to get credentials"
+    },
+    "execution_strategy": "Overall strategy to consume this API effectively",
     "endpoints": [{
-      "method": "...",
-      "path": "...",
-      "description": "...",
-      "parameters": [],
-      "response_schema": {"note": "Simplified"},
-      "category": "...",
-      "estimated_value": "high"
+      "method": "GET | POST | etc",
+      "path": "/users",
+      "description": "What this endpoint specifically provides",
+      "parameters": [{"name": "...", "type": "...", "required": true, "description": "..."}],
+      "response_schema": {"note": "Summary of key fields returned"},
+      "category": "data_fetch | analytics | search | admin",
+      "estimated_value": "high | medium | low",
+      "execution_steps": "Actionable steps to successfully call this endpoint (e.g., '1. Obtain project_id from /projects, 2. Pass as query param')"
     }]
   }]
 }
+
+LIMIT: Focus on the most VALUABLE 50 endpoints if the document is massive.
 `;
 
   const result = await client.models.generateContent({
