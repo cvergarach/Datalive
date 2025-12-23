@@ -29,6 +29,10 @@ export default function DocumentsPage() {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
 
+    // Input mode: 'file' or 'url'
+    const [inputMode, setInputMode] = useState<'file' | 'url'>('file');
+    const [urlInput, setUrlInput] = useState('');
+
     // Deletion state
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [docToDelete, setDocToDelete] = useState<Document | null>(null);
@@ -89,6 +93,25 @@ export default function DocumentsPage() {
         }
     };
 
+    const handleUrlSubmit = async () => {
+        if (!urlInput.trim() || !selectedProject) return;
+
+        try {
+            setUploading(true);
+            await api.post(`/projects/${selectedProject}/documents/from-url`, {
+                url: urlInput.trim()
+            });
+            // Clear input and refresh list
+            setUrlInput('');
+            fetchDocuments(selectedProject);
+        } catch (error: any) {
+            console.error('Error processing URL:', error);
+            alert(error.response?.data?.error || 'Failed to process URL');
+        } finally {
+            setUploading(false);
+        }
+    };
+
     const confirmDeleteDocument = async () => {
         if (!docToDelete || !selectedProject) return;
         await api.delete(`/projects/${selectedProject}/documents/${docToDelete.id}`);
@@ -139,20 +162,68 @@ export default function DocumentsPage() {
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle>Project Documents</CardTitle>
-                                <div className="relative">
-                                    <input
-                                        type="file"
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                        onChange={handleFileUpload}
-                                        disabled={uploading}
-                                    />
-                                    <Button disabled={uploading}>
-                                        <Upload className="mr-2 h-4 w-4" />
-                                        {uploading ? 'Uploading...' : 'Upload Document'}
-                                    </Button>
+                                <div className="flex items-center gap-4">
+                                    {/* Mode Toggle */}
+                                    <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                                        <button
+                                            onClick={() => setInputMode('file')}
+                                            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${inputMode === 'file'
+                                                ? 'bg-white dark:bg-gray-700 shadow-sm'
+                                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                                }`}
+                                        >
+                                            <Upload className="inline h-4 w-4 mr-1" />
+                                            Upload File
+                                        </button>
+                                        <button
+                                            onClick={() => setInputMode('url')}
+                                            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${inputMode === 'url'
+                                                ? 'bg-white dark:bg-gray-700 shadow-sm'
+                                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                                }`}
+                                        >
+                                            <FileText className="inline h-4 w-4 mr-1" />
+                                            Enter URL
+                                        </button>
+                                    </div>
+
+                                    {/* File Upload Button (shown when file mode) */}
+                                    {inputMode === 'file' && (
+                                        <div className="relative">
+                                            <input
+                                                type="file"
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                onChange={handleFileUpload}
+                                                disabled={uploading}
+                                            />
+                                            <Button disabled={uploading}>
+                                                <Upload className="mr-2 h-4 w-4" />
+                                                {uploading ? 'Processing...' : 'Select File'}
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                             </CardHeader>
                             <CardContent>
+                                {/* URL Input (shown when URL mode) */}
+                                {inputMode === 'url' && (
+                                    <div className="mb-6 flex gap-2">
+                                        <input
+                                            type="url"
+                                            placeholder="https://docs.example.com/api"
+                                            value={urlInput}
+                                            onChange={(e) => setUrlInput(e.target.value)}
+                                            onKeyPress={(e) => e.key === 'Enter' && handleUrlSubmit()}
+                                            disabled={uploading}
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        />
+                                        <Button onClick={handleUrlSubmit} disabled={uploading || !urlInput.trim()}>
+                                            {uploading ? 'Processing...' : 'Analyze'}
+                                        </Button>
+                                    </div>
+                                )}
+
+                                {/* Document List */}
                                 {loading ? (
                                     <p>Loading documents...</p>
                                 ) : documents.length === 0 ? (
@@ -216,7 +287,7 @@ export default function DocumentsPage() {
                     />
                 )}
             </div>
-        </div>
+        </div >
     );
 }
 

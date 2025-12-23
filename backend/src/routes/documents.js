@@ -201,6 +201,185 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 });
 
 /**
+ * POST /api/projects/:projectId/documents/from-url
+ * Analyze API documentation from a URL
+ */
+router.post('/from-url', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { url, title } = req.body;
+
+    if (!url) {
+      return res.status(400).json({ error: 'URL is required' });
+    }
+
+    // Import web scraper
+    const { scrapeWebContent, isValidUrl } = await import('../services/web-scraper.js');
+
+    // Validate URL
+    if (!isValidUrl(url)) {
+      return res.status(400).json({ error: 'Invalid URL format. Must start with http:// or https://' });
+    }
+
+    console.log(`🌐 Processing URL: ${url}`);
+
+    // 1. Scrape web content
+    const { content, mimeType, title: scrapedTitle } = await scrapeWebContent(url);
+
+    // 2. Upload scraped content to Gemini as a text file
+    console.log('📤 Uploading scraped content to Gemini...');
+
+    // Create temporary file with scraped content
+    const tempFilePath = `/tmp/scraped-${Date.now()}.txt`;
+    fs.writeFileSync(tempFilePath, content, 'utf-8');
+
+    const geminiFile = await geminiService.uploadFile(
+      tempFilePath,
+      title || scrapedTitle || url,
+      mimeType
+    );
+
+    // Clean up temp file
+    fs.unlinkSync(tempFilePath);
+
+    // 3. Save to database
+    const { data: document, error: dbError } = await supabaseAdmin
+      .from('api_documents')
+      .insert({
+        project_id: projectId,
+        title: title || scrapedTitle || url,
+        gemini_uri: geminiFile.uri,
+        gemini_name: geminiFile.name,
+        file_type: mimeType,
+        source_type: 'url',
+        source_url: url,
+        status: 'processing'
+      })
+      .select()
+      .single();
+
+    if (dbError) throw dbError;
+
+    // 4. Wait for Gemini to process
+    console.log('⏳ Waiting for Gemini to process content...');
+    await geminiService.waitForFileActive(geminiFile.name);
+
+    // 5. Update status to analyzed
+    await supabaseAdmin
+      .from('api_documents')
+      .update({ status: 'analyzed' })
+      .eq('id', document.id);
+
+    // 6. Start async API analysis
+    console.log('🤖 Starting API analysis...');
+    mcpClient.analyzeAPIDocument(geminiFile.uri, projectId, mimeType)
+      .then(async (analysis) => {
+        console.log('✅ Analysis complete');
+        console.log('📦 Full analysis response:', JSON.stringify(analysis, null, 2));
+
+        // Check for conceptual error
+        if (analysis.error && (!analysis.apis || analysis.apis.length === 0)) {
+          console.warn('⚠️ MCP returned an API analysis error:', analysis.error);
+          await supabaseAdmin
+            .from('api_documents')
+            .update({
+              status: 'error',
+              error_message: analysis.error
+            })
+            .eq('id', document.id);
+          return;
+        }
+
+        // Save discovered APIs
+        if (analysis.apis && analysis.apis.length > 0) {
+          console.log(`💾 Saving ${analysis.apis.length} API(s) to database...`);
+          for (const api of analysis.apis) {
+            console.log(`  → Saving API: ${api.name}`);
+            const { data: savedApi, error: apiError } = await supabaseAdmin
+              .from('discovered_apis')
+              .insert({
+                project_id: projectId,
+                document_id: document.id,
+                base_url: api.base_url,
+                name: api.name,
+                description: api.description,
+                auth_type: api.auth_type,
+                auth_details: api.auth_details,
+                execution_strategy: api.execution_strategy
+              })
+              .select()
+              .single();
+
+            if (apiError) {
+              console.error('❌ Error saving API:', apiError);
+              throw apiError;
+            }
+
+            console.log(`  ✅ API saved with ID: ${savedApi?.id}`);
+
+            // Save endpoints
+            if (api.endpoints && savedApi) {
+              const endpointsToInsert = api.endpoints.map(ep => ({
+                api_id: savedApi.id,
+                project_id: projectId,
+                method: ep.method,
+                path: ep.path,
+                description: ep.description,
+                parameters: ep.parameters,
+                response_schema: ep.response_schema,
+                category: ep.category,
+                estimated_value: ep.estimated_value,
+                execution_steps: ep.execution_steps
+              }));
+
+              await supabaseAdmin
+                .from('api_endpoints')
+                .insert(endpointsToInsert);
+            }
+          }
+        } else {
+          console.log('ℹ️ No APIs discovered in the URL content.');
+          await supabaseAdmin
+            .from('api_documents')
+            .update({
+              status: 'error',
+              error_message: 'Finished analysis but no API endpoints were discovered. Content might be non-technical or in an unsupported format.'
+            })
+            .eq('id', document.id);
+          return;
+        }
+
+        // Update document status successfully
+        await supabaseAdmin
+          .from('api_documents')
+          .update({ status: 'completed' })
+          .eq('id', document.id);
+      })
+      .catch(async (error) => {
+        console.error('Error in API analysis:', error);
+        await supabaseAdmin
+          .from('api_documents')
+          .update({
+            status: 'error',
+            error_message: error.message
+          })
+          .eq('id', document.id);
+      });
+
+    res.json({
+      message: 'URL content analyzed successfully',
+      document: {
+        ...document,
+        status: 'analyzing'
+      }
+    });
+  } catch (error) {
+    console.error('URL processing error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * GET /api/projects/:projectId/documents
  * Get all documents in a project
  */
