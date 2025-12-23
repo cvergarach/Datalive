@@ -213,8 +213,9 @@ router.post('/from-url', async (req, res) => {
       return res.status(400).json({ error: 'URL is required' });
     }
 
+
     // Import web scraper
-    const { scrapeWebContent, isValidUrl } = await import('../services/web-scraper.js');
+    const { crawlDocumentation, isValidUrl } = await import('../services/web-scraper.js');
 
     // Validate URL
     if (!isValidUrl(url)) {
@@ -223,8 +224,14 @@ router.post('/from-url', async (req, res) => {
 
     console.log(`🌐 Processing URL: ${url}`);
 
-    // 1. Scrape web content
-    const { content, mimeType, title: scrapedTitle } = await scrapeWebContent(url);
+    // 1. Crawl documentation recursively
+    const { content, mimeType, title: scrapedTitle, crawledPages } = await crawlDocumentation(url, {
+      maxDepth: 2,
+      maxPages: 10,
+      timeout: 60000
+    });
+
+    console.log(`📚 Crawled ${crawledPages} pages`);
 
     // 2. Upload scraped content to Gemini as a text file
     console.log('📤 Uploading scraped content to Gemini...');
