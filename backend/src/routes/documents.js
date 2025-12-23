@@ -50,7 +50,8 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     console.log('📤 Uploading file to Gemini...');
     const geminiFile = await geminiService.uploadFile(
       file.path,
-      title || file.originalname
+      title || file.originalname,
+      file.mimetype
     );
 
     // 2. Save to database using Admin client to bypass RLS

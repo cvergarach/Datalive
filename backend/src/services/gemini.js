@@ -21,18 +21,22 @@ class GeminiService {
   /**
    * Upload file to Gemini
    */
-  async uploadFile(filePath, displayName = null) {
+  async uploadFile(filePath, displayName = null, mimeType = null) {
     try {
       const fileName = displayName || path.basename(filePath);
-      console.log(`📂 Leyendo archivo para subir: ${filePath}`);
+      const effectiveMimeType = mimeType || this.getMimeType(filePath);
+
+      console.log(`📂 Leyendo archivo para subir: ${filePath}, MimeType: ${effectiveMimeType}`);
       const fileData = fs.readFileSync(filePath);
 
       const uploadResult = await client.files.upload({
         file: {
           data: fileData.toString('base64'),
-          mimeType: this.getMimeType(filePath),
         },
-        config: { displayName: fileName }
+        config: {
+          displayName: fileName,
+          mimeType: effectiveMimeType
+        }
       });
 
       console.log(`✅ Archivo subido a Gemini: ${uploadResult.uri}`);
