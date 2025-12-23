@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { supabase } from '../config/supabase.js';
+import { supabase, supabaseAdmin } from '../config/supabase.js';
 import geminiService from '../services/gemini.js';
 import mcpClient from '../services/mcp-client.js';
 import { authMiddleware, checkProjectAccess } from '../middleware/auth.js';
@@ -34,7 +34,7 @@ const upload = multer({
  */
 router.post('/upload', upload.single('file'), async (req, res) => {
   let uploadedFilePath = null;
-  
+
   try {
     const { projectId } = req.params;
     const { title } = req.body;
@@ -53,8 +53,8 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       title || file.originalname
     );
 
-    // 2. Save to database
-    const { data: document, error: dbError } = await supabase
+    // 2. Save to database using Admin client to bypass RLS
+    const { data: document, error: dbError } = await supabaseAdmin
       .from('api_documents')
       .insert({
         project_id: projectId,
@@ -84,7 +84,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     mcpClient.analyzeAPIDocument(geminiFile.uri, projectId)
       .then(async (analysis) => {
         console.log('✅ Analysis complete');
-        
+
         // Save discovered APIs
         if (analysis.apis && analysis.apis.length > 0) {
           for (const api of analysis.apis) {
@@ -153,7 +153,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
       fs.unlinkSync(uploadedFilePath);
     }
-    
+
     console.error('Upload error:', error);
     res.status(500).json({ error: error.message });
   }
