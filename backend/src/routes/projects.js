@@ -193,4 +193,38 @@ router.get('/:id/dependencies', async (req, res) => {
   }
 });
 
+/**
+ * DELETE /api/projects/:id
+ * Delete a project
+ */
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Check user is owner
+    const { data: project, error: projectError } = await supabaseAdmin
+      .from('projects')
+      .select('owner_id')
+      .eq('id', id)
+      .single();
+
+    if (projectError || !project || project.owner_id !== userId) {
+      return res.status(403).json({ error: 'Only owner can delete project' });
+    }
+
+    // Delete project (cascades to members, documents, etc.)
+    const { error } = await supabaseAdmin
+      .from('projects')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    res.json({ message: 'Project deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
