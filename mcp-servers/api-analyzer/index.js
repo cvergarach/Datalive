@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3001;
 app.use(express.json());
 
 const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const modelName = 'gemini-2.5-flash';
+const modelName = 'gemini-2.5-flash'; // High-performance latest model
 
 // MCP Tool: Analyze API Documentation
 app.post('/mcp/call', async (req, res) => {
@@ -41,47 +41,47 @@ app.post('/mcp/call', async (req, res) => {
 
 async function analyzeAPIDocument(geminiUri, projectId, mimeType = 'application/pdf') {
   const prompt = `
-Act as an expert API Architect and Security Researcher. Your goal is to DISCOVER and ANALYZE all consumable endpoints in this documentation to enable automated data extraction.
+Act as a world-class API Architect and Documentation Analyst. Your mission is to perform an EXHAUSTIVE discovery of all APIs and endpoints described in this document.
 
-INSTRUCTIONS:
-1. DOCUMENT REVIEW: Scan the entire document to find ALL distinct APIs.
-2. AUTHENTICATION INTELLIGENCE: 
-   - Identify EXACTLY how to authenticate (Auth Type, Header Name, Token Format).
-   - Provide a "Auth Setup Guide" for humans (e.g., "Go to dashboard -> Keys -> Copy API Key").
-3. ENDPOINT DISCOVERY:
-   - Find ALL consumable endpoints, especially those returning data (GET), Search, or Analytics.
-   - For EACH endpoint, devise a "Execution Plan": specific sequence of calls or parameter requirements to get data successfully.
-4. ACTIONABLE INTELLIGENCE:
-   - Categorize by business value (e.g., Inventory, Pricing, Customers).
-   - Identify dependencies between endpoints (e.g., "Must call /login first to get token").
+CORE OBJECTIVES:
+1. COMPLETE DISCOVERY: Identify EVERY distinct API service mentioned in the documentation.
+2. ACTIONABLE ENDPOINTS: Find ALL consumable endpoints (GET, POST, etc.), especially those that provide data, analytics, or search capabilities.
+3. SECURITY ANALYST: Extract the PRECISE authentication flow (Type, Header names, Token formats). Providing a "How-to-get-tokens" guide is CRITICAL.
+4. EXECUTION ROADMAP: For EACH endpoint, provide a specific "Execution Step" (e.g., "Step 1: Get ID from /v1/projects. Step 2: Use ID in this call").
+5. DATA VALUE: Mark endpoints that return the most valuable business data as "high" estimated value.
 
-OUTPUT FORMAT (JSON ONLY):
+EXTRACTION GUIDELINES:
+- Ignore non-technical sections (marketing, intro, TOS).
+- LOOK FOR: Specific URL patterns, cURL examples, Swagger/OpenAPI blocks, and tables of endpoints.
+- SEARCH EXHAUSTIVELY: Even if the document is structured poorly, find every URL that looks like an API endpoint.
+- Do NOT skip endpoints. Limit to 50 only if the document is excessively technical/repetitive.
+- Ensure the base_url is accurate (e.g., https://api.mercadopublico.cl) and includes the protocol.
+
+OUTPUT FORMAT (JSON MUST BE VALID):
 {
   "apis": [{
-    "name": "Professional name of the API",
-    "description": "Comprehensive summary of capabilities",
-    "base_url": "e.g., https://api.example.com/v1",
+    "name": "Full, professional API name",
+    "description": "2-3 sentences explaining exactly what this API does and its main use cases",
+    "base_url": "Full base URL including protocol",
     "auth_type": "bearer | api_key | oauth | basic | none",
     "auth_details": {
-      "header_name": "Authorization",
-      "format": "Bearer <token>",
-      "guide": "Step-by-step instructions to get credentials"
+      "header_name": "e.g., Authorization or x-api-key",
+      "format": "e.g., Bearer <token> or YourKeyHere",
+      "guide": "Actionable instructions for a user to find/generate their credentials for this specific API"
     },
-    "execution_strategy": "Overall strategy to consume this API effectively",
+    "execution_strategy": "A high-level explanation of how to chain these endpoints to generate value",
     "endpoints": [{
-      "method": "GET | POST | etc",
-      "path": "/users",
-      "description": "What this endpoint specifically provides",
-      "parameters": [{"name": "...", "type": "...", "required": true, "description": "..."}],
-      "response_schema": {"note": "Summary of key fields returned"},
-      "category": "data_fetch | analytics | search | admin",
+      "method": "GET | POST | PUT | DELETE | PATCH",
+      "path": "/api/resource",
+      "description": "Precise description of what this endpoint returns or affects",
+      "parameters": [{"name": "param_name", "type": "string|int|bool", "required": true, "description": "..."}],
+      "response_schema": {"note": "Summary of top-level JSON fields"},
+      "category": "data_fetch | mutation | analytics | search",
       "estimated_value": "high | medium | low",
-      "execution_steps": "Actionable steps to successfully call this endpoint (e.g., '1. Obtain project_id from /projects, 2. Pass as query param')"
+      "execution_steps": "Actionable technical requirement (e.g., 'Requires ProjectID as query param')"
     }]
   }]
 }
-
-LIMIT: Focus on the most VALUABLE 50 endpoints if the document is massive.
 `;
 
   const result = await client.models.generateContent({
@@ -89,11 +89,7 @@ LIMIT: Focus on the most VALUABLE 50 endpoints if the document is massive.
     config: {
       responseMimeType: 'application/json',
       maxOutputTokens: 8192,
-      temperature: 0.1,
-      thinkingConfig: {
-        includeThoughts: false,
-        thinkingBudget: 0
-      }
+      temperature: 0.0 // Keep it deterministic for extraction
     },
     contents: [
       {
