@@ -457,7 +457,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Image src="/logo.jpg" alt="DataLive" width={180} height={40} className="h-10 w-auto" />
+              <Image src="/logo-full.png" alt="DataLive" width={200} height={45} className="h-11 w-auto" priority />
             </div>
             <div className="flex items-center space-x-4">
               <div className="relative">
@@ -505,6 +505,10 @@ export default function LandingPage() {
             <div className="inline-flex items-center space-x-2 bg-blue-950/30 border border-blue-900/50 rounded-full px-4 py-2 mb-8">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
               <span className="text-sm text-blue-400 font-medium">{t.hero.badge}</span>
+            </div>
+
+            <div className="flex justify-center mb-6">
+              <Image src="/icon-wave.png" alt="DataLive Icon" width={80} height={80} className="opacity-90" />
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight max-w-4xl mx-auto">
