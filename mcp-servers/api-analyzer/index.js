@@ -87,7 +87,6 @@ OUTPUT FORMAT (JSON MUST BE VALID):
   const result = await client.models.generateContent({
     model: modelName,
     config: {
-      responseMimeType: 'application/json',
       maxOutputTokens: 8192,
       temperature: 0.0 // Keep it deterministic for extraction
     },
@@ -110,12 +109,6 @@ OUTPUT FORMAT (JSON MUST BE VALID):
   try {
     let text = result.text;
 
-    // Clean markdown if present
-    if (text.includes('```')) {
-      text = text.replace(/```json\n?|```/g, '').trim();
-    }
-
-    // Deep Diagnostics
     console.log('🤖 Gemini Response received!');
     console.log('📊 Metadata:', {
       length: text.length,
@@ -123,18 +116,30 @@ OUTPUT FORMAT (JSON MUST BE VALID):
       usage: result.usageMetadata
     });
 
+    // Clean markdown if present
+    if (text.includes('```')) {
+      console.log('🧹 Removing markdown code blocks...');
+      text = text.replace(/```json\n?|```/g, '').trim();
+    }
+
+    // Try direct parse first
     try {
-      return JSON.parse(text);
+      const parsed = JSON.parse(text);
+      console.log('✅ Successfully parsed JSON directly');
+      return parsed;
     } catch (innerError) {
       console.error('❌ First JSON parse failed, attempting fuzzy clean...');
       console.log('📝 First 1000 chars of response:', text.slice(0, 1000));
+
       // Try to find first { and last }
       const start = text.indexOf('{');
       const end = text.lastIndexOf('}');
       if (start !== -1 && end !== -1) {
         text = text.slice(start, end + 1);
         console.log('🔧 Attempting to parse extracted JSON...');
-        return JSON.parse(text);
+        const parsed = JSON.parse(text);
+        console.log('✅ Successfully parsed after extraction');
+        return parsed;
       }
       throw innerError;
     }
