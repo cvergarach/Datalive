@@ -1,4 +1,4 @@
-import { createClient } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
@@ -11,7 +11,7 @@ if (!apiKey) {
   throw new Error('GEMINI_API_KEY not found in environment variables');
 }
 
-const client = createClient({ apiKey });
+const client = new GoogleGenAI({ apiKey });
 
 class GeminiService {
   constructor() {
@@ -96,12 +96,17 @@ class GeminiService {
         model: this.model,
         contents: [
           {
-            fileData: {
-              fileUri: fileUri,
-              mimeType: 'application/pdf' // Adjust based on file type
-            }
-          },
-          prompt
+            role: 'user',
+            parts: [
+              {
+                fileData: {
+                  fileUri: fileUri,
+                  mimeType: 'application/pdf'
+                }
+              },
+              { text: prompt }
+            ]
+          }
         ]
       });
 

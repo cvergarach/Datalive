@@ -1,5 +1,5 @@
 import express from 'express';
-import { createClient } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 
-const client = createClient({ apiKey: process.env.GEMINI_API_KEY });
+const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const modelName = 'gemini-2.5-flash';
 
 // MCP Tool: Analyze API Documentation
@@ -84,12 +84,17 @@ Return as JSON with this structure:
     model: modelName,
     contents: [
       {
-        fileData: {
-          fileUri: geminiUri,
-          mimeType: 'application/pdf'
-        }
-      },
-      prompt
+        role: 'user',
+        parts: [
+          {
+            fileData: {
+              fileUri: geminiUri,
+              mimeType: 'application/pdf'
+            }
+          },
+          { text: prompt }
+        ]
+      }
     ]
   });
 
