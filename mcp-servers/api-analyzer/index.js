@@ -40,48 +40,49 @@ app.post('/mcp/call', async (req, res) => {
 });
 
 async function analyzeAPIDocument(geminiUri, projectId, mimeType = 'application/pdf') {
-  const prompt = `
-Act as a world-class API Architect and Documentation Analyst. Your mission is to perform an EXHAUSTIVE discovery of all APIs and endpoints described in this document.
+  const prompt = `You are an expert API documentation analyst. Extract ALL API information from this document.
 
-CORE OBJECTIVES:
-1. COMPLETE DISCOVERY: Identify EVERY distinct API service mentioned in the documentation.
-2. ACTIONABLE ENDPOINTS: Find ALL consumable endpoints (GET, POST, etc.), especially those that provide data, analytics, or search capabilities.
-3. SECURITY ANALYST: Extract the PRECISE authentication flow (Type, Header names, Token formats). Providing a "How-to-get-tokens" guide is CRITICAL.
-4. EXECUTION ROADMAP: For EACH endpoint, provide a specific "Execution Step" (e.g., "Step 1: Get ID from /v1/projects. Step 2: Use ID in this call").
-5. DATA VALUE: Mark endpoints that return the most valuable business data as "high" estimated value.
+FIND:
+1. Base URL (e.g., https://api.example.com)
+2. All endpoints (paths like /v1/users, /products, etc.)
+3. HTTP methods (GET, POST, PUT, DELETE)
+4. Authentication type (API key, Bearer token, OAuth, etc.)
+5. How to get credentials
 
-EXTRACTION GUIDELINES:
-- Ignore non-technical sections (marketing, intro, TOS).
-- LOOK FOR: Specific URL patterns, cURL examples, Swagger/OpenAPI blocks, and tables of endpoints.
-- SEARCH EXHAUSTIVELY: Even if the document is structured poorly, find every URL that looks like an API endpoint.
-- Do NOT skip endpoints. Limit to 50 only if the document is excessively technical/repetitive.
-- Ensure the base_url is accurate (e.g., https://api.mercadopublico.cl) and includes the protocol.
+IMPORTANT:
+- Look for URLs starting with http:// or https://
+- Look for paths starting with /
+- Extract ALL endpoints you find, don't skip any
+- If you find authentication info, include it
+- Return VALID JSON only
 
-OUTPUT FORMAT (JSON MUST BE VALID):
+OUTPUT FORMAT (JSON):
 {
   "apis": [{
-    "name": "Full, professional API name",
-    "description": "2-3 sentences explaining exactly what this API does and its main use cases",
-    "base_url": "Full base URL including protocol",
-    "auth_type": "bearer | api_key | oauth | basic | none",
+    "name": "API Name from document",
+    "description": "What this API does",
+    "base_url": "https://api.example.com",
+    "auth_type": "api_key",
     "auth_details": {
-      "header_name": "e.g., Authorization or x-api-key",
-      "format": "e.g., Bearer <token> or YourKeyHere",
-      "guide": "Actionable instructions for a user to find/generate their credentials for this specific API"
+      "header_name": "ticket",
+      "format": "ticket=YOUR_TICKET",
+      "guide": "How to get the ticket/key"
     },
-    "execution_strategy": "A high-level explanation of how to chain these endpoints to generate value",
+    "execution_strategy": "How to use this API effectively",
     "endpoints": [{
-      "method": "GET | POST | PUT | DELETE | PATCH",
-      "path": "/api/resource",
-      "description": "Precise description of what this endpoint returns or affects",
-      "parameters": [{"name": "param_name", "type": "string|int|bool", "required": true, "description": "..."}],
-      "response_schema": {"note": "Summary of top-level JSON fields"},
-      "category": "data_fetch | mutation | analytics | search",
-      "estimated_value": "high | medium | low",
-      "execution_steps": "Actionable technical requirement (e.g., 'Requires ProjectID as query param')"
+      "method": "GET",
+      "path": "/v1/resource",
+      "description": "What this endpoint does",
+      "parameters": [{"name": "param", "type": "string", "required": true, "description": "..."}],
+      "response_schema": {"note": "What it returns"},
+      "category": "data_fetch",
+      "estimated_value": "high",
+      "execution_steps": "How to call this endpoint"
     }]
   }]
 }
+
+If you cannot find any APIs, return: {"apis": [], "error": "No API endpoints found in document"}
 `;
 
   const result = await client.models.generateContent({
