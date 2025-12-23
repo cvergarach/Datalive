@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { ArrowRight, Database, TrendingUp, Shield, Globe, Sparkles, Languages } from 'lucide-react';
+import { ArrowRight, BarChart3, Clock, TrendingUp, Shield, Zap, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 
 const translations = {
@@ -8,169 +8,427 @@ const translations = {
     nav: { signIn: 'Iniciar Sesión' },
     hero: {
       badge: 'Inteligencia de APIs Impulsada por IA',
-      title1: 'Transforma Tus',
-      title2: ' Datos de API ',
-      title3: 'en Insights',
-      subtitle: 'Descubre, analiza e integra APIs automáticamente desde cualquier documentación. Deja que la IA extraiga endpoints, autenticación y estrategias de ejecución por ti.',
-      cta: 'Continuar con Google',
-      learnMore: 'Saber Más'
+      title: 'Las empresas solo usan el 20-30% de sus datos disponibles',
+      subtitle: 'Alquimia DataLive lee documentación completa de APIs, identifica todos los endpoints y descubre métricas ocultas que hoy no ves. En 24 horas hacemos lo que otros hacen en 6 meses.',
+      cta: 'Comenzar Ahora',
+      demo: 'Ver Demo'
+    },
+    problem: {
+      title: 'El Problema que Resolvemos',
+      subtitle: 'Pérdidas millonarias por APIs subutilizadas',
+      items: [
+        { title: 'Integración Manual Lenta', desc: '2-6 meses por API. Costos de US$25.000+ por integración.', stat: '6 meses' },
+        { title: 'Datos Desaprovechados', desc: 'Solo usas 20-30% de los datos disponibles en tus APIs.', stat: '70% perdido' },
+        { title: 'Métricas Ocultas', desc: 'Insights de negocio críticos quedan sin descubrir por falta de correlación.', stat: 'US$400K/año' }
+      ]
+    },
+    solution: {
+      title: 'Nuestra Solución',
+      subtitle: 'Máxima extracción de valor en tiempo récord',
+      items: [
+        { title: 'Discovery Automático', desc: 'Lee PDFs de 1.500+ páginas, Swagger y documentación web. Identifica 100% de endpoints disponibles.', icon: 'search' },
+        { title: 'Integración en 24h', desc: 'Genera código de conexión automáticamente. Maneja autenticación, rate limiting y errores.', icon: 'zap' },
+        { title: 'Métricas Ocultas', desc: 'IA analiza correlaciones entre APIs y descubre métricas que hoy no existen en tu empresa.', icon: 'chart' },
+        { title: 'ROI Comprobado', desc: 'Clientes recuperan inversión en menos de 3 meses. Casos documentados de US$400K/año en valor adicional.', icon: 'trending' }
+      ]
+    },
+    cases: {
+      title: 'Casos de Uso Reales',
+      subtitle: 'Resultados medibles en empresas como la tuya',
+      items: [
+        {
+          sector: 'E-commerce',
+          company: 'Retailer US$3M/año',
+          problem: 'Integración manual: 3 meses, US$25.000. Solo usa 25% de datos.',
+          result: 'Con DataLive: 2 días, US$2.000/mes. Genera US$80.000/año adicionales.',
+          roi: '333% ROI'
+        },
+        {
+          sector: 'Fintech',
+          company: 'Cartera US$5M préstamos',
+          problem: 'Default rate 7%. Pérdidas US$350.000/año. Scoring 1 dimensión.',
+          result: 'Con DataLive: Score 12 variables. Reduce default a 5.5%. Ahorra US$75.000/año.',
+          roi: '208% ROI'
+        },
+        {
+          sector: 'Corporación',
+          company: '300 empleados, US$30M revenue',
+          problem: 'Datos en silos. Dashboards parciales. Métricas clave desconocidas.',
+          result: 'Con DataLive: Unifica 6 APIs. Dashboard ejecutivo completo. Reduce churn 8% = US$400.000/año.',
+          roi: '555% ROI'
+        }
+      ]
     },
     features: {
-      title: 'Características Poderosas',
-      subtitle: 'Todo lo que necesitas para trabajar con APIs eficientemente',
-      ai: { title: 'Análisis con IA', desc: 'Sube PDFs o ingresa URLs. Nuestra IA extrae automáticamente endpoints, parámetros y detalles de autenticación.' },
-      crawl: { title: 'Rastreo Web', desc: 'Rastrea sitios de documentación recursivamente para descubrir todos los endpoints y recursos disponibles.' },
-      org: { title: 'Organización Inteligente', desc: 'Categoriza y organiza automáticamente las APIs descubiertas por proyecto, facilitando su búsqueda y uso.' },
-      exec: { title: 'Estrategias de Ejecución', desc: 'Obtén guías generadas por IA sobre cómo usar cada API efectivamente, incluyendo autenticación y mejores prácticas.' },
-      secure: { title: 'Seguro y Privado', desc: 'Tus datos están encriptados y almacenados de forma segura. Google OAuth garantiza autenticación segura.' },
-      insights: { title: 'Insights en Tiempo Real', desc: 'Obtén insights y analíticas instantáneas sobre tus APIs descubiertas y sus patrones de uso.' }
+      title: 'Características Empresariales',
+      subtitle: 'Tecnología de nivel corporativo',
+      items: [
+        { title: 'Seguridad Enterprise', desc: 'Encriptación end-to-end. Cumplimiento SOC 2. Datos en tu región.' },
+        { title: 'Escalabilidad', desc: 'Maneja miles de requests/segundo. Auto-scaling. 99.9% uptime SLA.' },
+        { title: 'Soporte Dedicado', desc: 'Customer Success Manager. Implementación asistida. SLA de respuesta.' }
+      ]
     },
     cta: {
-      title: '¿Listo para Transformar tu Flujo de Trabajo con APIs?',
-      subtitle: 'Únete a los desarrolladores que ya usan DataLive para optimizar su proceso de integración de APIs.',
-      button: 'Comenzar con Google'
+      title: '¿Cuánto dinero estás perdiendo por APIs subutilizadas?',
+      subtitle: 'Agenda una demo de 30 minutos y descubre el valor oculto en tus datos.',
+      button: 'Agendar Demo Gratuita'
     },
-    footer: '2025 DataLive. Plataforma de inteligencia de APIs impulsada por IA.'
+    footer: '2025 Alquimia DataLive. Convirtiendo APIs en valor de negocio.'
   },
   en: {
     nav: { signIn: 'Sign In' },
     hero: {
       badge: 'AI-Powered API Intelligence',
-      title1: 'Transform Your',
-      title2: ' API Data ',
-      title3: 'Into Insights',
-      subtitle: 'Automatically discover, analyze, and integrate APIs from any documentation. Let AI extract endpoints, authentication, and execution strategies for you.',
-      cta: 'Continue with Google',
-      learnMore: 'Learn More'
+      title: 'Companies only use 20-30% of their available data',
+      subtitle: 'Alquimia DataLive reads complete API documentation, identifies all endpoints, and discovers hidden metrics you don\'t see today. In 24 hours we do what others do in 6 months.',
+      cta: 'Get Started',
+      demo: 'Watch Demo'
+    },
+    problem: {
+      title: 'The Problem We Solve',
+      subtitle: 'Million-dollar losses from underutilized APIs',
+      items: [
+        { title: 'Slow Manual Integration', desc: '2-6 months per API. Costs of US$25,000+ per integration.', stat: '6 months' },
+        { title: 'Wasted Data', desc: 'You only use 20-30% of available data in your APIs.', stat: '70% lost' },
+        { title: 'Hidden Metrics', desc: 'Critical business insights remain undiscovered due to lack of correlation.', stat: 'US$400K/year' }
+      ]
+    },
+    solution: {
+      title: 'Our Solution',
+      subtitle: 'Maximum value extraction in record time',
+      items: [
+        { title: 'Automatic Discovery', desc: 'Reads 1,500+ page PDFs, Swagger and web documentation. Identifies 100% of available endpoints.', icon: 'search' },
+        { title: '24h Integration', desc: 'Automatically generates connection code. Handles authentication, rate limiting and errors.', icon: 'zap' },
+        { title: 'Hidden Metrics', desc: 'AI analyzes correlations between APIs and discovers metrics that don\'t exist in your company today.', icon: 'chart' },
+        { title: 'Proven ROI', desc: 'Clients recover investment in less than 3 months. Documented cases of US$400K/year in additional value.', icon: 'trending' }
+      ]
+    },
+    cases: {
+      title: 'Real Use Cases',
+      subtitle: 'Measurable results in companies like yours',
+      items: [
+        {
+          sector: 'E-commerce',
+          company: 'Retailer US$3M/year',
+          problem: 'Manual integration: 3 months, US$25,000. Only uses 25% of data.',
+          result: 'With DataLive: 2 days, US$2,000/month. Generates US$80,000/year additional.',
+          roi: '333% ROI'
+        },
+        {
+          sector: 'Fintech',
+          company: 'US$5M loan portfolio',
+          problem: '7% default rate. US$350,000/year losses. 1-dimension scoring.',
+          result: 'With DataLive: 12-variable score. Reduces default to 5.5%. Saves US$75,000/year.',
+          roi: '208% ROI'
+        },
+        {
+          sector: 'Corporation',
+          company: '300 employees, US$30M revenue',
+          problem: 'Data in silos. Partial dashboards. Unknown key metrics.',
+          result: 'With DataLive: Unifies 6 APIs. Complete executive dashboard. Reduces churn 8% = US$400,000/year.',
+          roi: '555% ROI'
+        }
+      ]
     },
     features: {
-      title: 'Powerful Features',
-      subtitle: 'Everything you need to work with APIs efficiently',
-      ai: { title: 'AI-Powered Analysis', desc: 'Upload PDFs or enter URLs. Our AI automatically extracts endpoints, parameters, and authentication details.' },
-      crawl: { title: 'Web Crawling', desc: 'Recursively crawl documentation sites to discover all available endpoints and resources.' },
-      org: { title: 'Smart Organization', desc: 'Automatically categorize and organize discovered APIs by project, making them easy to find and use.' },
-      exec: { title: 'Execution Strategies', desc: 'Get AI-generated guides on how to use each API effectively, including authentication and best practices.' },
-      secure: { title: 'Secure & Private', desc: 'Your data is encrypted and stored securely. Google OAuth ensures safe authentication.' },
-      insights: { title: 'Real-time Insights', desc: 'Get instant insights and analytics on your discovered APIs and their usage patterns.' }
+      title: 'Enterprise Features',
+      subtitle: 'Corporate-grade technology',
+      items: [
+        { title: 'Enterprise Security', desc: 'End-to-end encryption. SOC 2 compliance. Data in your region.' },
+        { title: 'Scalability', desc: 'Handles thousands of requests/second. Auto-scaling. 99.9% uptime SLA.' },
+        { title: 'Dedicated Support', desc: 'Customer Success Manager. Assisted implementation. Response SLA.' }
+      ]
     },
     cta: {
-      title: 'Ready to Transform Your API Workflow?',
-      subtitle: 'Join developers who are already using DataLive to streamline their API integration process.',
-      button: 'Get Started with Google'
+      title: 'How much money are you losing from underutilized APIs?',
+      subtitle: 'Schedule a 30-minute demo and discover the hidden value in your data.',
+      button: 'Schedule Free Demo'
     },
-    footer: '2025 DataLive. AI-powered API intelligence platform.'
+    footer: '2025 Alquimia DataLive. Turning APIs into business value.'
   },
   fr: {
     nav: { signIn: 'Se Connecter' },
     hero: {
       badge: 'Intelligence API Alimentée par IA',
-      title1: 'Transformez Vos',
-      title2: ' Données API ',
-      title3: 'en Insights',
-      subtitle: 'Découvrez, analysez et intégrez automatiquement des APIs depuis n\'importe quelle documentation. Laissez l\'IA extraire les endpoints, l\'authentification et les stratégies d\'exécution pour vous.',
-      cta: 'Continuer avec Google',
-      learnMore: 'En Savoir Plus'
+      title: 'Les entreprises n\'utilisent que 20-30% de leurs données disponibles',
+      subtitle: 'Alquimia DataLive lit la documentation complète des APIs, identifie tous les endpoints et découvre des métriques cachées que vous ne voyez pas aujourd\'hui. En 24 heures, nous faisons ce que d\'autres font en 6 mois.',
+      cta: 'Commencer',
+      demo: 'Voir Démo'
+    },
+    problem: {
+      title: 'Le Problème que Nous Résolvons',
+      subtitle: 'Pertes de millions dues aux APIs sous-utilisées',
+      items: [
+        { title: 'Intégration Manuelle Lente', desc: '2-6 mois par API. Coûts de 25 000 USD+ par intégration.', stat: '6 mois' },
+        { title: 'Données Gaspillées', desc: 'Vous n\'utilisez que 20-30% des données disponibles dans vos APIs.', stat: '70% perdu' },
+        { title: 'Métriques Cachées', desc: 'Des insights commerciaux critiques restent non découverts par manque de corrélation.', stat: '400K USD/an' }
+      ]
+    },
+    solution: {
+      title: 'Notre Solution',
+      subtitle: 'Extraction de valeur maximale en temps record',
+      items: [
+        { title: 'Découverte Automatique', desc: 'Lit des PDFs de 1 500+ pages, Swagger et documentation web. Identifie 100% des endpoints disponibles.', icon: 'search' },
+        { title: 'Intégration en 24h', desc: 'Génère automatiquement le code de connexion. Gère l\'authentification, le rate limiting et les erreurs.', icon: 'zap' },
+        { title: 'Métriques Cachées', desc: 'L\'IA analyse les corrélations entre APIs et découvre des métriques qui n\'existent pas dans votre entreprise aujourd\'hui.', icon: 'chart' },
+        { title: 'ROI Prouvé', desc: 'Les clients récupèrent l\'investissement en moins de 3 mois. Cas documentés de 400K USD/an en valeur additionnelle.', icon: 'trending' }
+      ]
+    },
+    cases: {
+      title: 'Cas d\'Usage Réels',
+      subtitle: 'Résultats mesurables dans des entreprises comme la vôtre',
+      items: [
+        {
+          sector: 'E-commerce',
+          company: 'Détaillant 3M USD/an',
+          problem: 'Intégration manuelle: 3 mois, 25 000 USD. N\'utilise que 25% des données.',
+          result: 'Avec DataLive: 2 jours, 2 000 USD/mois. Génère 80 000 USD/an supplémentaires.',
+          roi: '333% ROI'
+        },
+        {
+          sector: 'Fintech',
+          company: 'Portefeuille 5M USD prêts',
+          problem: 'Taux de défaut 7%. Pertes 350 000 USD/an. Scoring 1 dimension.',
+          result: 'Avec DataLive: Score 12 variables. Réduit défaut à 5,5%. Économise 75 000 USD/an.',
+          roi: '208% ROI'
+        },
+        {
+          sector: 'Corporation',
+          company: '300 employés, 30M USD revenus',
+          problem: 'Données en silos. Tableaux de bord partiels. Métriques clés inconnues.',
+          result: 'Avec DataLive: Unifie 6 APIs. Tableau de bord exécutif complet. Réduit churn 8% = 400 000 USD/an.',
+          roi: '555% ROI'
+        }
+      ]
     },
     features: {
-      title: 'Fonctionnalités Puissantes',
-      subtitle: 'Tout ce dont vous avez besoin pour travailler efficacement avec les APIs',
-      ai: { title: 'Analyse par IA', desc: 'Téléchargez des PDFs ou entrez des URLs. Notre IA extrait automatiquement les endpoints, paramètres et détails d\'authentification.' },
-      crawl: { title: 'Exploration Web', desc: 'Explorez récursivement les sites de documentation pour découvrir tous les endpoints et ressources disponibles.' },
-      org: { title: 'Organisation Intelligente', desc: 'Catégorisez et organisez automatiquement les APIs découvertes par projet, facilitant leur recherche et utilisation.' },
-      exec: { title: 'Stratégies d\'Exécution', desc: 'Obtenez des guides générés par IA sur comment utiliser chaque API efficacement, incluant l\'authentification et les meilleures pratiques.' },
-      secure: { title: 'Sécurisé et Privé', desc: 'Vos données sont cryptées et stockées en toute sécurité. Google OAuth garantit une authentification sûre.' },
-      insights: { title: 'Insights en Temps Réel', desc: 'Obtenez des insights et analyses instantanés sur vos APIs découvertes et leurs modèles d\'utilisation.' }
+      title: 'Fonctionnalités Entreprise',
+      subtitle: 'Technologie de niveau corporatif',
+      items: [
+        { title: 'Sécurité Entreprise', desc: 'Chiffrement de bout en bout. Conformité SOC 2. Données dans votre région.' },
+        { title: 'Évolutivité', desc: 'Gère des milliers de requêtes/seconde. Auto-scaling. SLA 99,9% uptime.' },
+        { title: 'Support Dédié', desc: 'Customer Success Manager. Implémentation assistée. SLA de réponse.' }
+      ]
     },
     cta: {
-      title: 'Prêt à Transformer Votre Flux de Travail API?',
-      subtitle: 'Rejoignez les développeurs qui utilisent déjà DataLive pour rationaliser leur processus d\'intégration API.',
-      button: 'Commencer avec Google'
+      title: 'Combien d\'argent perdez-vous avec des APIs sous-utilisées?',
+      subtitle: 'Planifiez une démo de 30 minutes et découvrez la valeur cachée dans vos données.',
+      button: 'Planifier Démo Gratuite'
     },
-    footer: '2025 DataLive. Plateforme d\'intelligence API alimentée par IA.'
+    footer: '2025 Alquimia DataLive. Transformer les APIs en valeur commerciale.'
   },
   pt: {
     nav: { signIn: 'Entrar' },
     hero: {
       badge: 'Inteligência de API Impulsionada por IA',
-      title1: 'Transforme Seus',
-      title2: ' Dados de API ',
-      title3: 'em Insights',
-      subtitle: 'Descubra, analise e integre APIs automaticamente de qualquer documentação. Deixe a IA extrair endpoints, autenticação e estratégias de execução para você.',
-      cta: 'Continuar com Google',
-      learnMore: 'Saiba Mais'
+      title: 'As empresas usam apenas 20-30% dos seus dados disponíveis',
+      subtitle: 'Alquimia DataLive lê documentação completa de APIs, identifica todos os endpoints e descobre métricas ocultas que você não vê hoje. Em 24 horas fazemos o que outros fazem em 6 meses.',
+      cta: 'Começar Agora',
+      demo: 'Ver Demo'
+    },
+    problem: {
+      title: 'O Problema que Resolvemos',
+      subtitle: 'Perdas milionárias por APIs subutilizadas',
+      items: [
+        { title: 'Integração Manual Lenta', desc: '2-6 meses por API. Custos de US$25.000+ por integração.', stat: '6 meses' },
+        { title: 'Dados Desperdiçados', desc: 'Você usa apenas 20-30% dos dados disponíveis em suas APIs.', stat: '70% perdido' },
+        { title: 'Métricas Ocultas', desc: 'Insights de negócio críticos permanecem não descobertos por falta de correlação.', stat: 'US$400K/ano' }
+      ]
+    },
+    solution: {
+      title: 'Nossa Solução',
+      subtitle: 'Máxima extração de valor em tempo recorde',
+      items: [
+        { title: 'Discovery Automático', desc: 'Lê PDFs de 1.500+ páginas, Swagger e documentação web. Identifica 100% dos endpoints disponíveis.', icon: 'search' },
+        { title: 'Integração em 24h', desc: 'Gera código de conexão automaticamente. Gerencia autenticação, rate limiting e erros.', icon: 'zap' },
+        { title: 'Métricas Ocultas', desc: 'IA analisa correlações entre APIs e descobre métricas que não existem em sua empresa hoje.', icon: 'chart' },
+        { title: 'ROI Comprovado', desc: 'Clientes recuperam investimento em menos de 3 meses. Casos documentados de US$400K/ano em valor adicional.', icon: 'trending' }
+      ]
+    },
+    cases: {
+      title: 'Casos de Uso Reais',
+      subtitle: 'Resultados mensuráveis em empresas como a sua',
+      items: [
+        {
+          sector: 'E-commerce',
+          company: 'Varejista US$3M/ano',
+          problem: 'Integração manual: 3 meses, US$25.000. Usa apenas 25% dos dados.',
+          result: 'Com DataLive: 2 dias, US$2.000/mês. Gera US$80.000/ano adicionais.',
+          roi: '333% ROI'
+        },
+        {
+          sector: 'Fintech',
+          company: 'Carteira US$5M empréstimos',
+          problem: 'Taxa de inadimplência 7%. Perdas US$350.000/ano. Scoring 1 dimensão.',
+          result: 'Com DataLive: Score 12 variáveis. Reduz inadimplência para 5,5%. Economiza US$75.000/ano.',
+          roi: '208% ROI'
+        },
+        {
+          sector: 'Corporação',
+          company: '300 funcionários, US$30M receita',
+          problem: 'Dados em silos. Dashboards parciais. Métricas-chave desconhecidas.',
+          result: 'Com DataLive: Unifica 6 APIs. Dashboard executivo completo. Reduz churn 8% = US$400.000/ano.',
+          roi: '555% ROI'
+        }
+      ]
     },
     features: {
-      title: 'Recursos Poderosos',
-      subtitle: 'Tudo que você precisa para trabalhar com APIs eficientemente',
-      ai: { title: 'Análise com IA', desc: 'Carregue PDFs ou insira URLs. Nossa IA extrai automaticamente endpoints, parâmetros e detalhes de autenticação.' },
-      crawl: { title: 'Rastreamento Web', desc: 'Rastreie sites de documentação recursivamente para descobrir todos os endpoints e recursos disponíveis.' },
-      org: { title: 'Organização Inteligente', desc: 'Categorize e organize automaticamente as APIs descobertas por projeto, facilitando sua busca e uso.' },
-      exec: { title: 'Estratégias de Execução', desc: 'Obtenha guias gerados por IA sobre como usar cada API efetivamente, incluindo autenticação e melhores práticas.' },
-      secure: { title: 'Seguro e Privado', desc: 'Seus dados são criptografados e armazenados com segurança. Google OAuth garante autenticação segura.' },
-      insights: { title: 'Insights em Tempo Real', desc: 'Obtenha insights e análises instantâneas sobre suas APIs descobertas e seus padrões de uso.' }
+      title: 'Recursos Empresariais',
+      subtitle: 'Tecnologia de nível corporativo',
+      items: [
+        { title: 'Segurança Enterprise', desc: 'Criptografia end-to-end. Conformidade SOC 2. Dados na sua região.' },
+        { title: 'Escalabilidade', desc: 'Gerencia milhares de requisições/segundo. Auto-scaling. SLA 99,9% uptime.' },
+        { title: 'Suporte Dedicado', desc: 'Customer Success Manager. Implementação assistida. SLA de resposta.' }
+      ]
     },
     cta: {
-      title: 'Pronto para Transformar Seu Fluxo de Trabalho com APIs?',
-      subtitle: 'Junte-se aos desenvolvedores que já usam DataLive para otimizar seu processo de integração de APIs.',
-      button: 'Começar com Google'
+      title: 'Quanto dinheiro você está perdendo por APIs subutilizadas?',
+      subtitle: 'Agende uma demo de 30 minutos e descubra o valor oculto em seus dados.',
+      button: 'Agendar Demo Gratuita'
     },
-    footer: '2025 DataLive. Plataforma de inteligência de API impulsionada por IA.'
+    footer: '2025 Alquimia DataLive. Transformando APIs em valor de negócio.'
   },
   de: {
     nav: { signIn: 'Anmelden' },
     hero: {
       badge: 'KI-gestützte API-Intelligenz',
-      title1: 'Verwandeln Sie Ihre',
-      title2: ' API-Daten ',
-      title3: 'in Erkenntnisse',
-      subtitle: 'Entdecken, analysieren und integrieren Sie APIs automatisch aus jeder Dokumentation. Lassen Sie KI Endpunkte, Authentifizierung und Ausführungsstrategien für Sie extrahieren.',
-      cta: 'Mit Google fortfahren',
-      learnMore: 'Mehr erfahren'
+      title: 'Unternehmen nutzen nur 20-30% ihrer verfügbaren Daten',
+      subtitle: 'Alquimia DataLive liest vollständige API-Dokumentation, identifiziert alle Endpunkte und entdeckt verborgene Metriken, die Sie heute nicht sehen. In 24 Stunden machen wir, was andere in 6 Monaten machen.',
+      cta: 'Jetzt Starten',
+      demo: 'Demo Ansehen'
+    },
+    problem: {
+      title: 'Das Problem, das Wir Lösen',
+      subtitle: 'Millionenverluste durch untergenutzte APIs',
+      items: [
+        { title: 'Langsame Manuelle Integration', desc: '2-6 Monate pro API. Kosten von 25.000 USD+ pro Integration.', stat: '6 Monate' },
+        { title: 'Verschwendete Daten', desc: 'Sie nutzen nur 20-30% der verfügbaren Daten in Ihren APIs.', stat: '70% verloren' },
+        { title: 'Verborgene Metriken', desc: 'Kritische Geschäftseinblicke bleiben unentdeckt aufgrund fehlender Korrelation.', stat: '400K USD/Jahr' }
+      ]
+    },
+    solution: {
+      title: 'Unsere Lösung',
+      subtitle: 'Maximale Wertextraktion in Rekordzeit',
+      items: [
+        { title: 'Automatische Entdeckung', desc: 'Liest 1.500+ Seiten PDFs, Swagger und Web-Dokumentation. Identifiziert 100% der verfügbaren Endpunkte.', icon: 'search' },
+        { title: '24h Integration', desc: 'Generiert automatisch Verbindungscode. Verwaltet Authentifizierung, Rate Limiting und Fehler.', icon: 'zap' },
+        { title: 'Verborgene Metriken', desc: 'KI analysiert Korrelationen zwischen APIs und entdeckt Metriken, die in Ihrem Unternehmen heute nicht existieren.', icon: 'chart' },
+        { title: 'Bewiesener ROI', desc: 'Kunden erholen Investition in weniger als 3 Monaten. Dokumentierte Fälle von 400K USD/Jahr an zusätzlichem Wert.', icon: 'trending' }
+      ]
+    },
+    cases: {
+      title: 'Echte Anwendungsfälle',
+      subtitle: 'Messbare Ergebnisse in Unternehmen wie Ihrem',
+      items: [
+        {
+          sector: 'E-commerce',
+          company: 'Einzelhändler 3M USD/Jahr',
+          problem: 'Manuelle Integration: 3 Monate, 25.000 USD. Nutzt nur 25% der Daten.',
+          result: 'Mit DataLive: 2 Tage, 2.000 USD/Monat. Generiert 80.000 USD/Jahr zusätzlich.',
+          roi: '333% ROI'
+        },
+        {
+          sector: 'Fintech',
+          company: '5M USD Kreditportfolio',
+          problem: '7% Ausfallrate. 350.000 USD/Jahr Verluste. 1-dimensionales Scoring.',
+          result: 'Mit DataLive: 12-Variablen-Score. Reduziert Ausfall auf 5,5%. Spart 75.000 USD/Jahr.',
+          roi: '208% ROI'
+        },
+        {
+          sector: 'Konzern',
+          company: '300 Mitarbeiter, 30M USD Umsatz',
+          problem: 'Daten in Silos. Teilweise Dashboards. Unbekannte Schlüsselmetriken.',
+          result: 'Mit DataLive: Vereint 6 APIs. Vollständiges Executive Dashboard. Reduziert Churn 8% = 400.000 USD/Jahr.',
+          roi: '555% ROI'
+        }
+      ]
     },
     features: {
-      title: 'Leistungsstarke Funktionen',
-      subtitle: 'Alles, was Sie brauchen, um effizient mit APIs zu arbeiten',
-      ai: { title: 'KI-gestützte Analyse', desc: 'Laden Sie PDFs hoch oder geben Sie URLs ein. Unsere KI extrahiert automatisch Endpunkte, Parameter und Authentifizierungsdetails.' },
-      crawl: { title: 'Web-Crawling', desc: 'Durchsuchen Sie Dokumentationsseiten rekursiv, um alle verfügbaren Endpunkte und Ressourcen zu entdecken.' },
-      org: { title: 'Intelligente Organisation', desc: 'Kategorisieren und organisieren Sie entdeckte APIs automatisch nach Projekten, um sie leicht zu finden und zu verwenden.' },
-      exec: { title: 'Ausführungsstrategien', desc: 'Erhalten Sie KI-generierte Anleitungen zur effektiven Nutzung jeder API, einschließlich Authentifizierung und Best Practices.' },
-      secure: { title: 'Sicher und Privat', desc: 'Ihre Daten werden verschlüsselt und sicher gespeichert. Google OAuth gewährleistet sichere Authentifizierung.' },
-      insights: { title: 'Echtzeit-Einblicke', desc: 'Erhalten Sie sofortige Einblicke und Analysen zu Ihren entdeckten APIs und deren Nutzungsmustern.' }
+      title: 'Enterprise-Funktionen',
+      subtitle: 'Unternehmensklasse-Technologie',
+      items: [
+        { title: 'Enterprise-Sicherheit', desc: 'End-to-End-Verschlüsselung. SOC 2-Konformität. Daten in Ihrer Region.' },
+        { title: 'Skalierbarkeit', desc: 'Verarbeitet Tausende Anfragen/Sekunde. Auto-Scaling. 99,9% Uptime-SLA.' },
+        { title: 'Dedizierter Support', desc: 'Customer Success Manager. Unterstützte Implementierung. Antwort-SLA.' }
+      ]
     },
     cta: {
-      title: 'Bereit, Ihren API-Workflow zu transformieren?',
-      subtitle: 'Schließen Sie sich Entwicklern an, die DataLive bereits nutzen, um ihren API-Integrationsprozess zu optimieren.',
-      button: 'Mit Google beginnen'
+      title: 'Wie viel Geld verlieren Sie durch untergenutzte APIs?',
+      subtitle: 'Vereinbaren Sie eine 30-minütige Demo und entdecken Sie den verborgenen Wert in Ihren Daten.',
+      button: 'Kostenlose Demo Vereinbaren'
     },
-    footer: '2025 DataLive. KI-gestützte API-Intelligenzplattform.'
+    footer: '2025 Alquimia DataLive. APIs in Geschäftswert verwandeln.'
   },
   jp: {
     nav: { signIn: 'サインイン' },
     hero: {
       badge: 'AI駆動のAPIインテリジェンス',
-      title1: 'あなたの',
-      title2: ' APIデータ ',
-      title3: 'を洞察に変換',
-      subtitle: 'あらゆるドキュメントからAPIを自動的に発見、分析、統合します。AIにエンドポイント、認証、実行戦略を抽出させましょう。',
-      cta: 'Googleで続ける',
-      learnMore: '詳細を見る'
+      title: '企業は利用可能なデータの20-30%しか使用していません',
+      subtitle: 'Alquimia DataLiveは完全なAPIドキュメントを読み取り、すべてのエンドポイントを識別し、今日見えない隠れたメトリクスを発見します。6ヶ月かかることを24時間で実現します。',
+      cta: '今すぐ始める',
+      demo: 'デモを見る'
+    },
+    problem: {
+      title: '私たちが解決する問題',
+      subtitle: '活用不足のAPIによる数百万ドルの損失',
+      items: [
+        { title: '遅い手動統合', desc: 'API1つあたり2-6ヶ月。統合1つあたり25,000ドル以上のコスト。', stat: '6ヶ月' },
+        { title: '無駄なデータ', desc: 'APIで利用可能なデータの20-30%しか使用していません。', stat: '70%損失' },
+        { title: '隠れたメトリクス', desc: '相関関係の欠如により、重要なビジネス洞察が発見されないままです。', stat: '40万ドル/年' }
+      ]
+    },
+    solution: {
+      title: '私たちのソリューション',
+      subtitle: '記録的な時間で最大の価値抽出',
+      items: [
+        { title: '自動ディスカバリー', desc: '1,500ページ以上のPDF、Swagger、Webドキュメントを読み取ります。利用可能なエンドポイントの100%を識別します。', icon: 'search' },
+        { title: '24時間統合', desc: '接続コードを自動生成します。認証、レート制限、エラーを処理します。', icon: 'zap' },
+        { title: '隠れたメトリクス', desc: 'AIがAPI間の相関関係を分析し、今日あなたの会社に存在しないメトリクスを発見します。', icon: 'chart' },
+        { title: '実証済みROI', desc: 'クライアントは3ヶ月未満で投資を回収します。年間40万ドルの追加価値の文書化されたケース。', icon: 'trending' }
+      ]
+    },
+    cases: {
+      title: '実際のユースケース',
+      subtitle: 'あなたのような企業での測定可能な結果',
+      items: [
+        {
+          sector: 'Eコマース',
+          company: '小売業者300万ドル/年',
+          problem: '手動統合：3ヶ月、25,000ドル。データの25%のみ使用。',
+          result: 'DataLiveで：2日、2,000ドル/月。年間80,000ドル追加生成。',
+          roi: '333% ROI'
+        },
+        {
+          sector: 'フィンテック',
+          company: '500万ドルローンポートフォリオ',
+          problem: 'デフォルト率7%。年間35万ドルの損失。1次元スコアリング。',
+          result: 'DataLiveで：12変数スコア。デフォルトを5.5%に削減。年間75,000ドル節約。',
+          roi: '208% ROI'
+        },
+        {
+          sector: '企業',
+          company: '従業員300人、収益3000万ドル',
+          problem: 'サイロ化されたデータ。部分的なダッシュボード。不明な主要メトリクス。',
+          result: 'DataLiveで：6つのAPIを統合。完全な経営ダッシュボード。チャーン8%削減 = 年間40万ドル。',
+          roi: '555% ROI'
+        }
+      ]
     },
     features: {
-      title: '強力な機能',
-      subtitle: 'APIを効率的に扱うために必要なすべて',
-      ai: { title: 'AI駆動の分析', desc: 'PDFをアップロードするか、URLを入力してください。AIが自動的にエンドポイント、パラメータ、認証の詳細を抽出します。' },
-      crawl: { title: 'Webクローリング', desc: 'ドキュメントサイトを再帰的にクロールして、利用可能なすべてのエンドポイントとリソースを発見します。' },
-      org: { title: 'スマート整理', desc: '発見されたAPIをプロジェクトごとに自動的に分類および整理し、簡単に検索して使用できるようにします。' },
-      exec: { title: '実行戦略', desc: '認証とベストプラクティスを含む、各APIを効果的に使用する方法に関するAI生成ガイドを取得します。' },
-      secure: { title: '安全でプライベート', desc: 'データは暗号化され、安全に保存されます。Google OAuthが安全な認証を保証します。' },
-      insights: { title: 'リアルタイムの洞察', desc: '発見されたAPIとその使用パターンに関する即座の洞察と分析を取得します。' }
+      title: 'エンタープライズ機能',
+      subtitle: '企業グレードの技術',
+      items: [
+        { title: 'エンタープライズセキュリティ', desc: 'エンドツーエンド暗号化。SOC 2準拠。お客様の地域にデータ。' },
+        { title: 'スケーラビリティ', desc: '毎秒数千のリクエストを処理。自動スケーリング。99.9%稼働時間SLA。' },
+        { title: '専任サポート', desc: 'カスタマーサクセスマネージャー。支援付き実装。応答SLA。' }
+      ]
     },
     cta: {
-      title: 'APIワークフローを変革する準備はできていますか？',
-      subtitle: 'すでにDataLiveを使用してAPI統合プロセスを合理化している開発者に参加してください。',
-      button: 'Googleで始める'
+      title: '活用不足のAPIでどれだけのお金を失っていますか？',
+      subtitle: '30分のデモをスケジュールして、データに隠された価値を発見してください。',
+      button: '無料デモをスケジュール'
     },
-    footer: '2025 DataLive. AI駆動のAPIインテリジェンスプラットフォーム。'
+    footer: '2025 Alquimia DataLive. APIをビジネス価値に変換。'
   }
 };
 
@@ -195,24 +453,23 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-black">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-black/90 backdrop-blur-md border-b border-gray-800 z-50">
+      <nav className="fixed top-0 w-full bg-black/95 backdrop-blur-sm border-b border-gray-900 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Image src="/logo.jpg" alt="DataLive" width={180} height={40} className="h-10 w-auto" />
             </div>
             <div className="flex items-center space-x-4">
-              {/* Language Selector */}
               <div className="relative">
                 <button
                   onClick={() => setShowLangMenu(!showLangMenu)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-900 transition-colors border border-gray-800"
                 >
-                  <Languages className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-300">{languages.find(l => l.code === lang)?.flag}</span>
+                  <span className="text-sm text-gray-400">{languages.find(l => l.code === lang)?.flag}</span>
+                  <ChevronDown className="w-4 h-4 text-gray-500" />
                 </button>
                 {showLangMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-800 rounded-lg shadow-xl py-2">
+                  <div className="absolute right-0 mt-2 w-48 bg-gray-950 border border-gray-800 rounded-lg shadow-2xl py-2">
                     {languages.map((language) => (
                       <button
                         key={language.code}
@@ -220,7 +477,7 @@ export default function LandingPage() {
                           setLang(language.code as any);
                           setShowLangMenu(false);
                         }}
-                        className={`w-full text-left px-4 py-2 hover:bg-gray-800 transition-colors flex items-center space-x-3 ${lang === language.code ? 'bg-gray-800' : ''
+                        className={`w-full text-left px-4 py-2 hover:bg-gray-900 transition-colors flex items-center space-x-3 ${lang === language.code ? 'bg-gray-900' : ''
                           }`}
                       >
                         <span>{language.flag}</span>
@@ -242,134 +499,165 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 border-b border-gray-900">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
-            <div className="inline-flex items-center space-x-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-2 mb-8">
-              <Sparkles className="w-4 h-4 text-blue-400" />
-              <span className="text-sm text-blue-300 font-medium">{t.hero.badge}</span>
+            <div className="inline-flex items-center space-x-2 bg-blue-950/30 border border-blue-900/50 rounded-full px-4 py-2 mb-8">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-blue-400 font-medium">{t.hero.badge}</span>
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-              {t.hero.title1}
-              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">{t.hero.title2}</span>
-              {t.hero.title3}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight max-w-4xl mx-auto">
+              {t.hero.title}
             </h1>
 
-            <p className="text-xl text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed">
               {t.hero.subtitle}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={handleSignIn}
-                className="group px-8 py-4 bg-white text-black rounded-xl font-semibold text-lg hover:bg-gray-200 transition-all duration-200 flex items-center justify-center space-x-2"
+                className="px-8 py-4 bg-white text-black rounded-lg font-semibold text-lg hover:bg-gray-200 transition-all duration-200 flex items-center justify-center space-x-2"
               >
-                <svg className="w-6 h-6" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                </svg>
                 <span>{t.hero.cta}</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-5 h-5" />
               </button>
 
-              <a
-                href="#features"
-                className="px-8 py-4 bg-gray-900 text-white rounded-xl font-semibold text-lg hover:bg-gray-800 transition-all duration-200 border border-gray-800"
+              <button
+                className="px-8 py-4 bg-gray-900 text-white rounded-lg font-semibold text-lg hover:bg-gray-800 transition-all duration-200 border border-gray-800"
               >
-                {t.hero.learnMore}
-              </a>
+                {t.hero.demo}
+              </button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Problem Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-950/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-white mb-4">{t.problem.title}</h2>
+            <p className="text-xl text-red-400">{t.problem.subtitle}</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {t.problem.items.map((item, idx) => (
+              <div key={idx} className="bg-gray-900/50 border border-gray-800 rounded-xl p-8">
+                <div className="text-4xl font-bold text-red-500 mb-4">{item.stat}</div>
+                <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
+                <p className="text-gray-400 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Solution Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-gray-900">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-white mb-4">{t.solution.title}</h2>
+            <p className="text-xl text-gray-400">{t.solution.subtitle}</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {t.solution.items.map((item, idx) => (
+              <div key={idx} className="bg-gray-900/30 border border-gray-800 rounded-xl p-8 hover:border-gray-700 transition-all">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                    {item.icon === 'search' && <BarChart3 className="w-6 h-6 text-blue-400" />}
+                    {item.icon === 'zap' && <Zap className="w-6 h-6 text-yellow-400" />}
+                    {item.icon === 'chart' && <TrendingUp className="w-6 h-6 text-green-400" />}
+                    {item.icon === 'trending' && <Clock className="w-6 h-6 text-purple-400" />}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
+                    <p className="text-gray-400 leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Cases Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-950/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-white mb-4">{t.cases.title}</h2>
+            <p className="text-xl text-gray-400">{t.cases.subtitle}</p>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {t.cases.items.map((item, idx) => (
+              <div key={idx} className="bg-gray-900 border border-gray-800 rounded-xl p-8">
+                <div className="text-sm text-blue-400 font-semibold mb-2">{item.sector}</div>
+                <div className="text-lg font-bold text-white mb-4">{item.company}</div>
+
+                <div className="mb-6">
+                  <div className="text-sm text-gray-500 mb-2">Antes:</div>
+                  <p className="text-sm text-gray-400">{item.problem}</p>
+                </div>
+
+                <div className="mb-6">
+                  <div className="text-sm text-gray-500 mb-2">Después:</div>
+                  <p className="text-sm text-gray-300">{item.result}</p>
+                </div>
+
+                <div className="pt-4 border-t border-gray-800">
+                  <div className="text-2xl font-bold text-green-400">{item.roi}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-950">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-gray-900">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">{t.features.title}</h2>
+            <h2 className="text-3xl font-bold text-white mb-4">{t.features.title}</h2>
             <p className="text-xl text-gray-400">{t.features.subtitle}</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 hover:border-blue-500/50 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center mb-6">
-                <Sparkles className="w-6 h-6 text-white" />
+          <div className="grid md:grid-cols-3 gap-8">
+            {t.features.items.map((item, idx) => (
+              <div key={idx} className="bg-gray-900/30 border border-gray-800 rounded-xl p-8">
+                <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center mb-6">
+                  {idx === 0 && <Shield className="w-6 h-6 text-blue-400" />}
+                  {idx === 1 && <TrendingUp className="w-6 h-6 text-green-400" />}
+                  {idx === 2 && <BarChart3 className="w-6 h-6 text-purple-400" />}
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
+                <p className="text-gray-400 leading-relaxed">{item.desc}</p>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">{t.features.ai.title}</h3>
-              <p className="text-gray-400 leading-relaxed">{t.features.ai.desc}</p>
-            </div>
-
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 hover:border-blue-500/50 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-400 rounded-xl flex items-center justify-center mb-6">
-                <Globe className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3">{t.features.crawl.title}</h3>
-              <p className="text-gray-400 leading-relaxed">{t.features.crawl.desc}</p>
-            </div>
-
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 hover:border-blue-500/50 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-400 rounded-xl flex items-center justify-center mb-6">
-                <Database className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3">{t.features.org.title}</h3>
-              <p className="text-gray-400 leading-relaxed">{t.features.org.desc}</p>
-            </div>
-
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 hover:border-blue-500/50 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-400 rounded-xl flex items-center justify-center mb-6">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3">{t.features.exec.title}</h3>
-              <p className="text-gray-400 leading-relaxed">{t.features.exec.desc}</p>
-            </div>
-
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 hover:border-blue-500/50 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-400 rounded-xl flex items-center justify-center mb-6">
-                <Shield className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3">{t.features.secure.title}</h3>
-              <p className="text-gray-400 leading-relaxed">{t.features.secure.desc}</p>
-            </div>
-
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 hover:border-blue-500/50 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-400 rounded-xl flex items-center justify-center mb-6">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3">{t.features.insights.title}</h3>
-              <p className="text-gray-400 leading-relaxed">{t.features.insights.desc}</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-950 to-black border-t border-gray-900">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-white mb-6">{t.cta.title}</h2>
+          <h2 className="text-3xl font-bold text-white mb-6">{t.cta.title}</h2>
           <p className="text-xl text-gray-400 mb-10">{t.cta.subtitle}</p>
           <button
             onClick={handleSignIn}
-            className="group px-10 py-5 bg-white text-black rounded-xl font-semibold text-lg hover:bg-gray-200 transition-all duration-200 inline-flex items-center space-x-3"
+            className="px-10 py-5 bg-white text-black rounded-lg font-semibold text-lg hover:bg-gray-200 transition-all duration-200 inline-flex items-center space-x-3"
           >
-            <svg className="w-6 h-6" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-            </svg>
             <span>{t.cta.button}</span>
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-5 h-5" />
           </button>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="border-t border-gray-900 py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center text-gray-500">
+        <div className="max-w-7xl mx-auto text-center text-gray-600">
           <p>{t.footer}</p>
         </div>
       </footer>
