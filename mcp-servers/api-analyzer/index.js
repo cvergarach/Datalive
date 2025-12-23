@@ -127,6 +127,14 @@ If you cannot find any APIs, return: {"apis": [], "error": "No API endpoints fou
     try {
       const parsed = JSON.parse(text);
       console.log('✅ Successfully parsed JSON directly');
+      console.log('📋 Parsed content:', JSON.stringify(parsed, null, 2));
+
+      // Check if we got empty results
+      if (!parsed.apis || parsed.apis.length === 0) {
+        console.error('⚠️ WARNING: Gemini returned empty APIs array!');
+        console.log('📝 Full response text:', text);
+      }
+
       return parsed;
     } catch (innerError) {
       console.error('❌ First JSON parse failed, attempting fuzzy clean...');
