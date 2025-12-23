@@ -86,6 +86,19 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       .then(async (analysis) => {
         console.log('✅ Analysis complete');
 
+        // Check for conceptual error (e.g. valid JSON but apis: [] or explicit error)
+        if (analysis.error && (!analysis.apis || analysis.apis.length === 0)) {
+          console.warn('⚠️ MCP returned an API analysis error:', analysis.error);
+          await supabaseAdmin
+            .from('api_documents')
+            .update({
+              status: 'error',
+              error_message: analysis.error
+            })
+            .eq('id', document.id);
+          return;
+        }
+
         // Save discovered APIs
         if (analysis.apis && analysis.apis.length > 0) {
           for (const api of analysis.apis) {
@@ -124,9 +137,20 @@ router.post('/upload', upload.single('file'), async (req, res) => {
                 .insert(endpointsToInsert);
             }
           }
+        } else {
+          console.log('ℹ️ No APIs discovered in the document.');
+          // We can mark it as error so the user knows why it's empty
+          await supabaseAdmin
+            .from('api_documents')
+            .update({
+              status: 'error',
+              error_message: 'Finished analysis but no API endpoints were discovered. Documentation might be non-technical or in an unsupported format.'
+            })
+            .eq('id', document.id);
+          return;
         }
 
-        // Update document status
+        // Update document status successfully
         await supabaseAdmin
           .from('api_documents')
           .update({ status: 'completed' })

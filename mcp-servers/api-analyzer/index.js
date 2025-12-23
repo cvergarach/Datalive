@@ -108,7 +108,12 @@ OUTPUT FORMAT (JSON MUST BE VALID):
   });
 
   try {
-    const text = result.text;
+    let text = result.text;
+
+    // Clean markdown if present
+    if (text.includes('```')) {
+      text = text.replace(/```json\n?|```/g, '').trim();
+    }
 
     // Deep Diagnostics
     console.log('🤖 Gemini Response received!');
@@ -118,17 +123,26 @@ OUTPUT FORMAT (JSON MUST BE VALID):
       usage: result.usageMetadata
     });
 
-    if (result.candidates?.[0]?.finishReason === 'MAX_TOKENS') {
-      console.warn('⚠️ Response was truncated due to token limit (MAX_TOKENS)');
+    try {
+      return JSON.parse(text);
+    } catch (innerError) {
+      console.error('❌ First JSON parse failed, attempting fuzzy clean...');
+      // Try to find first { and last }
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      if (start !== -1 && end !== -1) {
+        text = text.slice(start, end + 1);
+        return JSON.parse(text);
+      }
+      throw innerError;
     }
-
-    return JSON.parse(text);
   } catch (parseError) {
     console.error('❌ Failed to parse Gemini response as JSON:', parseError);
-    // Don't log the whole thing if it's too big, just the end
-    const lastPart = result.text.slice(-200);
-    console.error('Last 200 characters of response:', lastPart);
-    return { apis: [], error: 'Response parsing failed', partial: lastPart };
+    return {
+      apis: [],
+      error: 'API extraction failed to produce valid data. The document might not contain recognizable API endpoints or the format was too complex.',
+      raw: (result.text || '').slice(0, 500)
+    };
   }
 }
 
