@@ -507,8 +507,8 @@ export default function LandingPage() {
               <span className="text-sm text-blue-400 font-medium">{t.hero.badge}</span>
             </div>
 
-            <div className="flex justify-center mb-6">
-              <Image src="/icon-wave.png" alt="DataLive Icon" width={80} height={80} className="opacity-90" />
+            <div className="flex justify-center mb-8">
+              <Image src="/logo-full.png" alt="DataLive" width={400} height={90} className="w-auto h-20 sm:h-24" priority />
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight max-w-4xl mx-auto">
