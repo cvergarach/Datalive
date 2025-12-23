@@ -17,7 +17,7 @@ const fileManager = new GoogleAIFileManager(apiKey);
 
 class GeminiService {
   constructor() {
-    this.model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    this.model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
   }
 
   /**
@@ -26,7 +26,7 @@ class GeminiService {
   async uploadFile(filePath, displayName = null) {
     try {
       const fileName = displayName || path.basename(filePath);
-      
+
       const uploadResult = await fileManager.uploadFile(filePath, {
         mimeType: this.getMimeType(filePath),
         displayName: fileName
@@ -70,11 +70,11 @@ class GeminiService {
   async waitForFileActive(fileName, maxAttempts = 30, intervalMs = 2000) {
     for (let i = 0; i < maxAttempts; i++) {
       const status = await this.getFileStatus(fileName);
-      
+
       if (status.state === 'ACTIVE') {
         return status;
       }
-      
+
       if (status.state === 'FAILED') {
         throw new Error('File processing failed');
       }

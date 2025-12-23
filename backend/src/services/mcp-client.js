@@ -22,7 +22,8 @@ class MCPClient {
       throw new Error(`MCP server '${serverName}' not configured`);
     }
 
-    const targetUrl = `${serverUrl}/mcp/call`;
+    const baseUrl = serverUrl.endsWith('/') ? serverUrl.slice(0, -1) : serverUrl;
+    const targetUrl = `${baseUrl}/mcp/call`;
     console.log(`📡 Calling MCP: ${targetUrl} (tool: ${tool})`);
 
     try {
