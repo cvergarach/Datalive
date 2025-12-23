@@ -84,6 +84,10 @@ Return as JSON:
       responseMimeType: 'application/json',
       maxOutputTokens: 8192,
       temperature: 0.1,
+      thinkingConfig: {
+        includeThoughts: false,
+        thinkingBudget: 0
+      }
     },
     contents: [
       {
