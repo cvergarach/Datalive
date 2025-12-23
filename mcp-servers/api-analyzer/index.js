@@ -40,56 +40,44 @@ app.post('/mcp/call', async (req, res) => {
 });
 
 async function analyzeAPIDocument(geminiUri, projectId, mimeType = 'application/pdf') {
-  const prompt = `You are an expert API documentation analyst. Extract ALL API information from this document.
+  const prompt = `Extract API information from this document. Return ONLY valid JSON.
 
-FIND:
-1. Base URL (e.g., https://api.example.com)
-2. All endpoints (paths like /v1/users, /products, etc.)
-3. HTTP methods (GET, POST, PUT, DELETE)
-4. Authentication type (API key, Bearer token, OAuth, etc.)
-5. How to get credentials
+Find:
+- Base URL (https://api.example.com)
+- All endpoints (/path)
+- HTTP methods (GET, POST, etc.)
+- Authentication (API key, Bearer, etc.)
 
-IMPORTANT:
-- Look for URLs starting with http:// or https://
-- Look for paths starting with /
-- Extract ALL endpoints you find, don't skip any
-- If you find authentication info, include it
-- Return VALID JSON only
-
-OUTPUT FORMAT (JSON):
+JSON format:
 {
   "apis": [{
-    "name": "API Name from document",
-    "description": "What this API does",
+    "name": "API Name",
+    "description": "What it does",
     "base_url": "https://api.example.com",
     "auth_type": "api_key",
-    "auth_details": {
-      "header_name": "ticket",
-      "format": "ticket=YOUR_TICKET",
-      "guide": "How to get the ticket/key"
-    },
-    "execution_strategy": "How to use this API effectively",
+    "auth_details": {"header_name": "ticket", "format": "ticket=VALUE", "guide": "How to get it"},
+    "execution_strategy": "How to use it",
     "endpoints": [{
       "method": "GET",
       "path": "/v1/resource",
-      "description": "What this endpoint does",
+      "description": "What it returns",
       "parameters": [{"name": "param", "type": "string", "required": true, "description": "..."}],
-      "response_schema": {"note": "What it returns"},
+      "response_schema": {"note": "Response structure"},
       "category": "data_fetch",
       "estimated_value": "high",
-      "execution_steps": "How to call this endpoint"
+      "execution_steps": "How to call it"
     }]
   }]
 }
 
-If you cannot find any APIs, return: {"apis": [], "error": "No API endpoints found in document"}
-`;
+Return {"apis": []} if no APIs found.`;
+
 
   const result = await client.models.generateContent({
     model: modelName,
     config: {
-      maxOutputTokens: 8192,
-      temperature: 0.0 // Keep it deterministic for extraction
+      maxOutputTokens: 16384, // Increased to prevent truncation
+      temperature: 0.1 // Low but not zero to allow some creativity
     },
     contents: [
       {
