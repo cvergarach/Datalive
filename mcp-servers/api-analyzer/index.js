@@ -39,7 +39,7 @@ app.post('/mcp/call', async (req, res) => {
   }
 });
 
-async function analyzeAPIDocument(geminiUri, projectId) {
+async function analyzeAPIDocument(geminiUri, projectId, mimeType = 'application/pdf') {
   const prompt = `
 Analyze this API documentation and extract:
 
@@ -89,7 +89,7 @@ Return as JSON with this structure:
           {
             fileData: {
               fileUri: geminiUri,
-              mimeType: 'application/pdf'
+              mimeType: mimeType
             }
           },
           { text: prompt }

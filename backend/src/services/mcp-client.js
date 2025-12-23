@@ -31,7 +31,7 @@ class MCPClient {
         tool,
         params
       }, {
-        timeout: 120000, // 2 minutes timeout
+        timeout: 600000, // 10 minutes timeout
         headers: {
           'Content-Type': 'application/json'
         }

@@ -74,7 +74,7 @@ class GeminiService {
   /**
    * Wait for file to be ACTIVE
    */
-  async waitForFileActive(fileName, maxAttempts = 30, intervalMs = 2000) {
+  async waitForFileActive(fileName, maxAttempts = 150, intervalMs = 2000) {
     for (let i = 0; i < maxAttempts; i++) {
       const status = await this.getFileStatus(fileName);
 
