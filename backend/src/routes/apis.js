@@ -186,4 +186,26 @@ router.post('/:apiId/execute', async (req, res) => {
   }
 });
 
+/**
+ * DELETE /api/projects/:projectId/apis/:apiId
+ * Delete a specific discovered API
+ */
+router.delete('/:apiId', async (req, res) => {
+  try {
+    const { projectId, apiId } = req.params;
+
+    const { error } = await supabaseAdmin
+      .from('discovered_apis')
+      .delete()
+      .eq('id', apiId)
+      .eq('project_id', projectId);
+
+    if (error) throw error;
+
+    res.json({ message: 'API deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

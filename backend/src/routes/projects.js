@@ -150,34 +150,44 @@ router.put('/:id', async (req, res) => {
 });
 
 /**
- * DELETE /api/projects/:id
- * Delete a project
+ * GET /api/projects/:id/dependencies
+ * Check project dependencies before deletion
  */
-router.delete('/:id', async (req, res) => {
+router.get('/:id/dependencies', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
 
-    // Check user is owner
-    const { data: project, error: projectError } = await supabaseAdmin
-      .from('projects')
-      .select('owner_id')
-      .eq('id', id)
-      .single();
+    const counts = {
+      documents: 0,
+      apis: 0,
+      endpoints: 0,
+      data: 0,
+      insights: 0,
+      dashboards: 0
+    };
 
-    if (projectError || project.owner_id !== userId) {
-      return res.status(403).json({ error: 'Only owner can delete project' });
-    }
+    // Parallel count queries
+    const [
+      { count: docsCount },
+      { count: apisCount },
+      { count: dataCount },
+      { count: insightsCount },
+      { count: dashboardsCount }
+    ] = await Promise.all([
+      supabaseAdmin.from('api_documents').select('*', { count: 'exact', head: true }).eq('project_id', id),
+      supabaseAdmin.from('discovered_apis').select('*', { count: 'exact', head: true }).eq('project_id', id),
+      supabaseAdmin.from('api_data').select('*', { count: 'exact', head: true }).eq('project_id', id),
+      supabaseAdmin.from('insights').select('*', { count: 'exact', head: true }).eq('project_id', id),
+      supabaseAdmin.from('dashboards').select('*', { count: 'exact', head: true }).eq('project_id', id)
+    ]);
 
-    // Delete project (cascades to members, documents, etc.)
-    const { error } = await supabaseAdmin
-      .from('projects')
-      .delete()
-      .eq('id', id);
+    counts.documents = docsCount || 0;
+    counts.apis = apisCount || 0;
+    counts.data = dataCount || 0;
+    counts.insights = insightsCount || 0;
+    counts.dashboards = dashboardsCount || 0;
 
-    if (error) throw error;
-
-    res.json({ message: 'Project deleted successfully' });
+    res.json({ counts });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

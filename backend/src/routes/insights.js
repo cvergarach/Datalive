@@ -33,4 +33,19 @@ router.post('/generate', async (req, res) => {
   }
 });
 
+router.delete('/:insightId', async (req, res) => {
+  try {
+    const { projectId, insightId } = req.params;
+    const { error } = await supabaseAdmin
+      .from('insights')
+      .delete()
+      .eq('id', insightId)
+      .eq('project_id', projectId);
+    if (error) throw error;
+    res.json({ message: 'Insight deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

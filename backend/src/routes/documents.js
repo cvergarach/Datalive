@@ -209,6 +209,31 @@ router.get('/:documentId', async (req, res) => {
 });
 
 /**
+ * GET /api/projects/:projectId/documents/:documentId/dependencies
+ * Check document dependencies before deletion
+ */
+router.get('/:documentId/dependencies', async (req, res) => {
+  try {
+    const { documentId } = req.params;
+
+    const { count: apisCount, error } = await supabaseAdmin
+      .from('discovered_apis')
+      .select('*', { count: 'exact', head: true })
+      .eq('document_id', documentId);
+
+    if (error) throw error;
+
+    res.json({
+      counts: {
+        apis: apisCount || 0
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * DELETE /api/projects/:projectId/documents/:documentId
  * Delete a document
  */
