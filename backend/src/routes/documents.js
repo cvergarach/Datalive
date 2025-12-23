@@ -85,6 +85,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     mcpClient.analyzeAPIDocument(geminiFile.uri, projectId, geminiFile.mimeType)
       .then(async (analysis) => {
         console.log('✅ Analysis complete');
+        console.log('📦 Full analysis response:', JSON.stringify(analysis, null, 2));
 
         // Check for conceptual error (e.g. valid JSON but apis: [] or explicit error)
         if (analysis.error && (!analysis.apis || analysis.apis.length === 0)) {
@@ -101,8 +102,10 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
         // Save discovered APIs
         if (analysis.apis && analysis.apis.length > 0) {
+          console.log(`💾 Saving ${analysis.apis.length} API(s) to database...`);
           for (const api of analysis.apis) {
-            const { data: savedApi } = await supabaseAdmin
+            console.log(`  → Saving API: ${api.name}`);
+            const { data: savedApi, error: apiError } = await supabaseAdmin
               .from('discovered_apis')
               .insert({
                 project_id: projectId,
@@ -116,6 +119,13 @@ router.post('/upload', upload.single('file'), async (req, res) => {
               })
               .select()
               .single();
+
+            if (apiError) {
+              console.error('❌ Error saving API:', apiError);
+              throw apiError;
+            }
+
+            console.log(`  ✅ API saved with ID: ${savedApi?.id}`);
 
             // Save endpoints
             if (api.endpoints && savedApi) {
