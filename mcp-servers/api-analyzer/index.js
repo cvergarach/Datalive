@@ -54,45 +54,62 @@ app.post('/mcp/call', async (req, res) => {
 });
 
 async function analyzeAPIDocument(textContent, projectId, mimeType = 'application/pdf') {
-  const prompt = `🚨 CRITICAL TASK: Extract API Endpoints from Documentation 🚨
+  const prompt = `🚨 CRITICAL TASK: Extract API Configuration from Documentation or Source Code 🚨
 
-YOU ARE AN EXPERT API DOCUMENTATION ANALYZER.
-YOUR SUCCESS IS MEASURED BY HOW MANY ENDPOINTS YOU EXTRACT.
-RETURNING EMPTY endpoints:[] IS A FAILURE.
+YOU ARE AN EXPERT API ANALYZER.
+YOUR GOAL: Extract API endpoints, authentication details, and configuration examples.
 
 ═══════════════════════════════════════════════════════════════
 
-WHAT YOU'RE LOOKING FOR:
+WHAT YOU'RE ANALYZING:
 
-1. BASE URL - Examples:
-   ✓ "https://api.stripe.com"
-   ✓ "Base URL: https://api.example.com/v1"
-   ✓ Found in curl: curl https://api.stripe.com/v1/charges
+1. **API Documentation** (PDFs, markdown, HTML)
+2. **Source Code** (Python, JavaScript, etc.) that calls APIs
 
-2. ENDPOINTS - They look like this:
-   ✓ "POST /v1/customers"
-   ✓ "GET /v1/charges/:id"
-   ✓ "DELETE /v1/subscriptions/{id}"
-   ✓ curl -X POST https://api.stripe.com/v1/payment_intents
-   ✓ stripe.customers.create() → POST /v1/customers
-   ✓ stripe.charges.retrieve(id) → GET /v1/charges/:id
-   ✓ "Create a customer" → POST /v1/customers
-   ✓ "List all invoices" → GET /v1/invoices
+═══════════════════════════════════════════════════════════════
 
-3. WHERE TO LOOK:
+EXTRACTION RULES:
+
+1. **BASE URL** - Look for:
+   ✓ BASE_URL = "https://..."
+   ✓ base_url: "https://..."
+   ✓ API_ENDPOINT = "https://..."
+   ✓ In curl: curl https://api.example.com/v1/...
+
+2. **AUTHENTICATION** - Detect type from code:
+   ✓ USERNAME + PASSWORD → auth_type: "basic"
+   ✓ API_KEY or TOKEN → auth_type: "bearer" or "api_key"
+   ✓ ticket parameter → auth_type: "ticket"
+   ✓ OAuth client_id/secret → auth_type: "oauth"
+
+3. **CREDENTIALS EXAMPLES** - Extract from code:
+   ✓ USERNAME = "example_user" → Include in auth_details.example
+   ✓ PASSWORD = "example_pass" → Include in auth_details.example
+   ✓ API_KEY = "sk_test_..." → Include in auth_details.example
+
+4. **ENDPOINTS** - Extract from:
+   ✓ requests.get(f"{BASE_URL}/endpoint") → GET /endpoint
+   ✓ fetch(\`\${API_URL}/users\`) → GET /users
+   ✓ curl -X POST https://api.com/v1/create → POST /v1/create
+
+═══════════════════════════════════════════════════════════════
 
 OUTPUT FORMAT (STRICT JSON):
 
 {
   "apis": [{
-    "name": "API Name (e.g., Stripe API)",
+    "name": "API Name",
     "description": "Brief description",
     "base_url": "https://api.example.com",
-    "auth_type": "api_key|bearer|basic|oauth|none",
+    "auth_type": "basic|bearer|api_key|ticket|oauth|none",
     "auth_details": {
       "header_name": "Authorization",
-      "format": "Bearer TOKEN",
-      "guide": "How to get credentials"
+      "format": "Basic base64(username:password)",
+      "guide": "How to get credentials",
+      "example": {
+        "username": "example_user",
+        "password": "example_pass"
+      }
     },
     "execution_strategy": "How to use this API",
     "endpoints": [
@@ -101,12 +118,11 @@ OUTPUT FORMAT (STRICT JSON):
         "path": "/v1/resource",
         "description": "What this endpoint does",
         "parameters": [
-          {"name": "id", "type": "string", "required": true, "description": "Resource ID"}
+          {"name": "id", "type": "string", "required": true, "description": "Resource ID", "example": "12345"}
         ],
         "response_schema": {"example": "response"},
         "category": "data_fetch|data_modify|auth|other",
-        "estimated_value": "high|medium|low",
-        "execution_steps": "Step by step how to call"
+        "estimated_value": "high|medium|low"
       }
     ]
   }]
@@ -114,44 +130,30 @@ OUTPUT FORMAT (STRICT JSON):
 
 ═══════════════════════════════════════════════════════════════
 
-🚨 CRITICAL SUCCESS CRITERIA:
+CRITICAL INSTRUCTIONS:
 
-✅ MINIMUM 10 endpoints extracted (if documentation has them)
-✅ Each endpoint has method + path
-✅ Base URL identified
-✅ Auth type detected
+1. **If analyzing SOURCE CODE**:
+   - Extract BASE_URL, API_ENDPOINT, or similar constants
+   - Detect auth type from USERNAME/PASSWORD, API_KEY, TOKEN variables
+   - Find all HTTP requests (requests.get, fetch, axios, curl)
+   - Extract endpoint paths from request URLs
+   - Include example credentials found in code (sanitize if needed)
 
-❌ FAILURE CONDITIONS:
-❌ Returning {"apis": []} when endpoints exist
-❌ Returning endpoints:[] when documentation clearly has endpoints
-❌ Extracting fewer than 5 endpoints from comprehensive docs
-❌ Missing obvious endpoints mentioned in titles/headers
+2. **If analyzing DOCUMENTATION**:
+   - Look for "API Reference", "Endpoints", "Authentication" sections
+   - Extract curl examples
+   - Find endpoint tables
+   - Get authentication instructions
 
-═══════════════════════════════════════════════════════════════
-
-SPECIAL INSTRUCTIONS:
-
-1. If you see "API Reference" section → EXTRACT EVERYTHING FROM IT
-2. If you see curl examples → EXTRACT THE ENDPOINT
-3. If you see SDK calls → CONVERT TO REST ENDPOINT
-4. If you see "Create/Retrieve/Update/Delete/List" → IT'S AN ENDPOINT
-5. If unsure about a path → INCLUDE IT (better to have false positives)
-
-6. For Stripe specifically:
-   - Look for /v1/customers, /v1/charges, /v1/payment_intents
-   - Look for /v1/invoices, /v1/subscriptions, /v1/products
-   - Look for /v1/prices, /v1/coupons, /v1/refunds
-
-7. For any API:
-   - Common patterns: /api/v1/..., /v1/..., /v2/...
-   - Resources are usually plural: /users, /products, /orders
-   - Detail endpoints have :id or {id}: /users/:id
+3. **ALWAYS include**:
+   - auth_details.example with sample values (from code or docs)
+   - parameters with example values
+   - Clear guide on how to configure
 
 ═══════════════════════════════════════════════════════════════
 
-NOW ANALYZE THE DOCUMENT BELOW.
-EXTRACT EVERY SINGLE ENDPOINT YOU CAN FIND.
-DO NOT SKIP ANY.
+NOW ANALYZE THE CONTENT BELOW.
+EXTRACT ALL API CONFIGURATION AND ENDPOINTS.
 RETURN VALID JSON ONLY.
 
 BEGIN ANALYSIS:`;
