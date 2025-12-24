@@ -240,7 +240,7 @@ BEGIN ANALYSIS:`;
   // The backend should pass the actual text content instead of just URI
   const result = await claude.messages.create({
     model: modelName,
-    max_tokens: 16384,
+    max_tokens: 8192, // Claude Haiku max output tokens
     temperature: 0.4,
     messages: [{
       role: 'user',
