@@ -110,7 +110,11 @@ router.post('/upload', upload.single('file'), async (req, res) => {
                 description: api.description,
                 auth_type: api.auth_type,
                 auth_details: api.auth_details,
-                execution_strategy: api.execution_strategy
+                execution_strategy: api.execution_strategy,
+                metadata: {
+                  auto_executable: api.auto_executable || false,
+                  extracted_credentials: api.extracted_credentials || null
+                }
               })
               .select()
               .single();

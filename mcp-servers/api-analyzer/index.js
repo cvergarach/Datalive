@@ -54,43 +54,40 @@ app.post('/mcp/call', async (req, res) => {
 });
 
 async function analyzeAPIDocument(textContent, projectId, mimeType = 'application/pdf') {
-  const prompt = `🚨 CRITICAL TASK: Extract API Configuration from Documentation or Source Code 🚨
+  const prompt = `🚨 CRITICAL TASK: Extract API Configuration for AUTOMATIC EXECUTION 🚨
 
-YOU ARE AN EXPERT API ANALYZER.
-YOUR GOAL: Extract API endpoints, authentication details, and configuration examples.
-
-═══════════════════════════════════════════════════════════════
-
-WHAT YOU'RE ANALYZING:
-
-1. **API Documentation** (PDFs, markdown, HTML)
-2. **Source Code** (Python, JavaScript, etc.) that calls APIs
+YOU ARE AN EXPERT API ANALYZER WITH ONE GOAL:
+Extract EVERYTHING needed to automatically execute API endpoints WITHOUT user intervention.
 
 ═══════════════════════════════════════════════════════════════
 
-EXTRACTION RULES:
+WHAT YOU MUST EXTRACT:
 
-1. **BASE URL** - Look for:
-   ✓ BASE_URL = "https://..."
-   ✓ base_url: "https://..."
-   ✓ API_ENDPOINT = "https://..."
-   ✓ In curl: curl https://api.example.com/v1/...
+1. **BASE URL** - The API endpoint
+2. **AUTHENTICATION CREDENTIALS** - Actual values from the document
+3. **ENDPOINTS** - All available API endpoints
+4. **PARAMETERS** - With example values for auto-execution
+5. **EXECUTION SEQUENCE** - Order to execute endpoints
 
-2. **AUTHENTICATION** - Detect type from code:
-   ✓ USERNAME + PASSWORD → auth_type: "basic"
-   ✓ API_KEY or TOKEN → auth_type: "bearer" or "api_key"
-   ✓ ticket parameter → auth_type: "ticket"
-   ✓ OAuth client_id/secret → auth_type: "oauth"
+═══════════════════════════════════════════════════════════════
 
-3. **CREDENTIALS EXAMPLES** - Extract from code:
-   ✓ USERNAME = "example_user" → Include in auth_details.example
-   ✓ PASSWORD = "example_pass" → Include in auth_details.example
-   ✓ API_KEY = "sk_test_..." → Include in auth_details.example
+CREDENTIAL EXTRACTION (CRITICAL):
 
-4. **ENDPOINTS** - Extract from:
-   ✓ requests.get(f"{BASE_URL}/endpoint") → GET /endpoint
-   ✓ fetch(\`\${API_URL}/users\`) → GET /users
-   ✓ curl -X POST https://api.com/v1/create → POST /v1/create
+Look for these patterns in the document:
+
+**Python/JavaScript Code:**
+- BASE_URL = "https://..." → Extract the URL
+- USERNAME = "user123" → Extract the username
+- PASSWORD = "pass456" → Extract the password
+- API_KEY = "sk_..." → Extract the key
+- TOKEN = "..." → Extract the token
+
+**Documentation:**
+- "Username: admin" → Extract "admin"
+- "API Key: abc123" → Extract "abc123"
+- "Example: ticket=xyz" → Extract "xyz"
+
+**IMPORTANT:** Extract the ACTUAL VALUES, not placeholders!
 
 ═══════════════════════════════════════════════════════════════
 
@@ -101,28 +98,39 @@ OUTPUT FORMAT (STRICT JSON):
     "name": "API Name",
     "description": "Brief description",
     "base_url": "https://api.example.com",
-    "auth_type": "basic|bearer|api_key|ticket|oauth|none",
+    "auth_type": "basic|bearer|api_key|ticket|oauth|token|none",
+    "auto_executable": true,
+    "extracted_credentials": {
+      "username": "actual_username_from_doc",
+      "password": "actual_password_from_doc",
+      "api_key": "actual_key_from_doc",
+      "ticket": "actual_ticket_from_doc"
+    },
     "auth_details": {
       "header_name": "Authorization",
       "format": "Basic base64(username:password)",
-      "guide": "How to get credentials",
-      "example": {
-        "username": "example_user",
-        "password": "example_pass"
-      }
+      "guide": "Credentials extracted from document"
     },
-    "execution_strategy": "How to use this API",
+    "execution_strategy": "Step-by-step execution plan",
     "endpoints": [
       {
         "method": "GET|POST|PUT|DELETE|PATCH",
         "path": "/v1/resource",
         "description": "What this endpoint does",
+        "category": "auth|data_fetch|data_modify|other",
+        "estimated_value": "high|medium|low",
         "parameters": [
-          {"name": "id", "type": "string", "required": true, "description": "Resource ID", "example": "12345"}
+          {
+            "name": "param_name",
+            "type": "string",
+            "required": true,
+            "description": "Parameter description",
+            "example": "actual_value_from_doc",
+            "auto_value": "value_to_use_for_auto_execution"
+          }
         ],
-        "response_schema": {"example": "response"},
-        "category": "data_fetch|data_modify|auth|other",
-        "estimated_value": "high|medium|low"
+        "execution_order": 1,
+        "requires_auth_token": false
       }
     ]
   }]
@@ -132,28 +140,76 @@ OUTPUT FORMAT (STRICT JSON):
 
 CRITICAL INSTRUCTIONS:
 
-1. **If analyzing SOURCE CODE**:
-   - Extract BASE_URL, API_ENDPOINT, or similar constants
-   - Detect auth type from USERNAME/PASSWORD, API_KEY, TOKEN variables
-   - Find all HTTP requests (requests.get, fetch, axios, curl)
-   - Extract endpoint paths from request URLs
-   - Include example credentials found in code (sanitize if needed)
+1. **ALWAYS extract actual credential values** from the document
+   - If you see USERNAME = "Claro_cvergara_API" → use "Claro_cvergara_API"
+   - If you see PASSWORD = "H0men3tw0rk@api" → use "H0men3tw0rk@api"
+   - DO NOT use placeholders like "your_username" or "example_password"
 
-2. **If analyzing DOCUMENTATION**:
-   - Look for "API Reference", "Endpoints", "Authentication" sections
-   - Extract curl examples
-   - Find endpoint tables
-   - Get authentication instructions
+2. **Set auto_executable = true** if:
+   - You found actual credentials in the document
+   - You can infer parameter values
+   - The API can be executed without user input
 
-3. **ALWAYS include**:
-   - auth_details.example with sample values (from code or docs)
-   - parameters with example values
-   - Clear guide on how to configure
+3. **Set execution_order** for endpoints:
+   - Auth endpoints should be order 1
+   - Data fetch endpoints should be order 2+
+   - Endpoints that need tokens should come after auth
+
+4. **Provide auto_value for parameters**:
+   - Use example values from the document
+   - Use extracted credentials for auth parameters
+   - Use common defaults (e.g., "password" for grantType)
+
+5. **Detect auth type correctly**:
+   - USERNAME + PASSWORD → "basic"
+   - API_KEY or X-API-Key → "api_key"
+   - Bearer token → "bearer"
+   - ticket parameter → "ticket"
+   - TOKEN in headers → "token"
+
+═══════════════════════════════════════════════════════════════
+
+EXAMPLES:
+
+**Example 1: Python code with credentials**
+\`\`\`python
+BASE_URL = "https://176.52.129.49:26335"
+USERNAME = "Claro_cvergara_API"
+PASSWORD = "H0men3tw0rk@api"
+\`\`\`
+
+Output:
+\`\`\`json
+{
+  "base_url": "https://176.52.129.49:26335",
+  "auth_type": "basic",
+  "auto_executable": true,
+  "extracted_credentials": {
+    "username": "Claro_cvergara_API",
+    "password": "H0men3tw0rk@api"
+  }
+}
+\`\`\`
+
+**Example 2: Documentation with ticket**
+"Access ticket: abc123xyz"
+
+Output:
+\`\`\`json
+{
+  "auth_type": "ticket",
+  "auto_executable": true,
+  "extracted_credentials": {
+    "ticket": "abc123xyz"
+  }
+}
+\`\`\`
 
 ═══════════════════════════════════════════════════════════════
 
 NOW ANALYZE THE CONTENT BELOW.
-EXTRACT ALL API CONFIGURATION AND ENDPOINTS.
+EXTRACT ALL CREDENTIALS AND CONFIGURATION.
+MAKE IT AUTO-EXECUTABLE.
 RETURN VALID JSON ONLY.
 
 BEGIN ANALYSIS:`;
