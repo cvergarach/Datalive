@@ -84,13 +84,13 @@ router.post('/:apiId/configure', async (req, res) => {
       credentials
     });
 
-    // Save configuration
+    // Save configuration (always mark as active, user can test manually)
     const { data: config, error: configError } = await supabaseAdmin
       .from('api_configurations')
       .upsert({
         api_id: apiId,
         credentials,
-        is_active: testResult.success,
+        is_active: true, // Always active, let user test manually
         last_tested: new Date().toISOString(),
         test_status: testResult.success ? 'success' : 'failed'
       }, {
