@@ -454,6 +454,12 @@ router.post('/:apiId/auto-execute', async (req, res) => {
       } catch (error) {
         const duration = Date.now() - startTime;
         console.error(`    ❌ ${endpoint.method} ${endpoint.path} - ${error.message}`);
+        console.error(`    🔍 Error details:`, {
+          name: error.name,
+          message: error.message,
+          cause: error.cause,
+          stack: error.stack?.split('\n')[0]
+        });
 
         results.push({
           endpoint_id: endpoint.id,
@@ -461,6 +467,10 @@ router.post('/:apiId/auto-execute', async (req, res) => {
           method: endpoint.method,
           success: false,
           error: error.message,
+          error_details: {
+            name: error.name,
+            cause: error.cause?.toString()
+          },
           duration_ms: duration
         });
       }
