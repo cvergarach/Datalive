@@ -118,18 +118,31 @@ router.post('/:apiId/configure', async (req, res) => {
 router.post('/:apiId/execute', async (req, res) => {
   try {
     const { projectId, apiId } = req.params;
-    const { endpoint_ids } = req.body; // Array of endpoint IDs to execute
+    const { endpoint_ids, parameters } = req.body;
 
-    // Get API config
+    console.log(`🚀 Executing endpoint for API ${apiId}`);
+
+    // Get API details
+    const { data: api, error: apiError } = await supabaseAdmin
+      .from('discovered_apis')
+      .select('*')
+      .eq('id', apiId)
+      .single();
+
+    if (apiError || !api) {
+      return res.status(404).json({ error: 'API not found' });
+    }
+
+    // Get API config (credentials)
     const { data: config, error: configError } = await supabaseAdmin
       .from('api_configurations')
-      .select('credentials, discovered_apis(base_url, auth_type)')
+      .select('credentials')
       .eq('api_id', apiId)
       .eq('is_active', true)
       .single();
 
     if (configError || !config) {
-      return res.status(400).json({ error: 'API not configured or inactive' });
+      return res.status(400).json({ error: 'API not configured. Please configure credentials first.' });
     }
 
     // Get endpoints
@@ -141,47 +154,107 @@ router.post('/:apiId/execute', async (req, res) => {
 
     if (endpointsError) throw endpointsError;
 
-    // Execute via MCP
-    const results = await mcpClient.batchExecute(
-      endpoints.map(ep => ({
-        method: ep.method,
-        path: ep.path,
-        params: ep.parameters
-      })),
-      {
-        type: config.discovered_apis.auth_type,
-        credentials: config.credentials
-      },
-      projectId
-    );
+    if (!endpoints || endpoints.length === 0) {
+      return res.status(404).json({ error: 'No endpoints found' });
+    }
 
-    // Save data
-    const dataToInsert = results.map((result, index) => ({
-      project_id: projectId,
-      api_id: apiId,
-      endpoint_id: endpoints[index].id,
-      data: result.data,
-      record_count: Array.isArray(result.data) ? result.data.length : 1,
-      execution_duration: result.duration_ms,
-      status: result.success ? 'success' : 'error'
-    }));
+    // Execute each endpoint
+    const results = [];
+    for (const endpoint of endpoints) {
+      const startTime = Date.now();
 
-    const { data: savedData, error: dataError } = await supabaseAdmin
-      .from('api_data')
-      .insert(dataToInsert)
-      .select();
+      try {
+        // Build URL
+        let url = `${api.base_url}${endpoint.path}`;
 
-    if (dataError) throw dataError;
+        // Build headers
+        const headers = {
+          'Content-Type': 'application/json'
+        };
 
-    // Trigger insight generation
-    mcpClient.generateInsights(projectId, savedData.map(d => d.id))
-      .catch(err => console.error('Insight generation error:', err));
+        // Add auth
+        if (api.auth_type === 'basic' && config.credentials.username && config.credentials.password) {
+          const auth = Buffer.from(`${config.credentials.username}:${config.credentials.password}`).toString('base64');
+          headers['Authorization'] = `Basic ${auth}`;
+        } else if (api.auth_type === 'bearer' && config.credentials.api_key) {
+          headers['Authorization'] = `Bearer ${config.credentials.api_key}`;
+        } else if (api.auth_type === 'api_key' && config.credentials.api_key) {
+          headers['X-API-Key'] = config.credentials.api_key;
+        }
+
+        // Add parameters
+        const requestParams = { ...parameters };
+
+        // For ticket auth, add ticket to params
+        if (api.auth_type === 'ticket' && config.credentials.ticket) {
+          requestParams.ticket = config.credentials.ticket;
+        }
+
+        // Make request
+        let response;
+        if (endpoint.method === 'GET') {
+          const queryString = new URLSearchParams(requestParams).toString();
+          url = queryString ? `${url}?${queryString}` : url;
+
+          console.log(`📡 GET ${url}`);
+          response = await fetch(url, { headers });
+        } else {
+          console.log(`📡 ${endpoint.method} ${url}`);
+          response = await fetch(url, {
+            method: endpoint.method,
+            headers,
+            body: JSON.stringify(requestParams)
+          });
+        }
+
+        const duration = Date.now() - startTime;
+        const responseData = await response.text();
+
+        let parsedData;
+        try {
+          parsedData = JSON.parse(responseData);
+        } catch {
+          parsedData = responseData;
+        }
+
+        results.push({
+          endpoint_id: endpoint.id,
+          success: response.ok,
+          status_code: response.status,
+          data: parsedData,
+          duration_ms: duration
+        });
+
+        // Save to database
+        await supabaseAdmin
+          .from('api_data')
+          .insert({
+            project_id: projectId,
+            api_id: apiId,
+            endpoint_id: endpoint.id,
+            data: parsedData,
+            record_count: Array.isArray(parsedData) ? parsedData.length : 1,
+            execution_duration: duration,
+            status: response.ok ? 'success' : 'error'
+          });
+
+      } catch (error) {
+        const duration = Date.now() - startTime;
+        results.push({
+          endpoint_id: endpoint.id,
+          success: false,
+          error: error.message,
+          duration_ms: duration
+        });
+      }
+    }
 
     res.json({
-      message: 'API execution completed',
-      results: savedData
+      message: 'Execution completed',
+      results
     });
   } catch (error) {
+    console.error('❌ Execution error:', error);
     res.status(500).json({ error: error.message });
   }
 });
