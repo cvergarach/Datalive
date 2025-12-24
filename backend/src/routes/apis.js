@@ -316,11 +316,12 @@ router.post('/:apiId/auto-execute', async (req, res) => {
         onConflict: 'api_id'
       });
 
-    // Get endpoints
+    // Get endpoints (auth first, then others)
     const { data: endpoints } = await supabaseAdmin
       .from('api_endpoints')
       .select('*')
       .eq('api_id', apiId)
+      .order('category', { ascending: false }) // 'auth' comes before 'data_fetch' alphabetically when descending
       .order('id');
 
     if (!endpoints || endpoints.length === 0) {
