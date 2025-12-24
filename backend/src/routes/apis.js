@@ -384,95 +384,103 @@ router.post('/:apiId/auto-execute', async (req, res) => {
           }
         }
 
-        // Make request
+        // Make request with axios (supports SSL bypass properly)
+        const https = await import('https');
+        const axios = (await import('axios')).default;
+
+        const httpsAgent = new https.Agent({
+          rejectUnauthorized: false
+        });
+
         let response;
-
-        // Create agent for HTTPS with self-signed certificates
-        const agent = api.base_url.startsWith('https')
-          ? new (await import('https')).Agent({ rejectUnauthorized: false })
-          : undefined;
-
-        if (endpoint.method === 'GET') {
-          const queryString = new URLSearchParams(params).toString();
-          url = queryString ? `${url}?${queryString}` : url;
-
-          console.log(`    📡 GET ${url}`);
-          response = await fetch(url, { headers, agent });
-        } else {
-          console.log(`    📡 ${endpoint.method} ${url}`);
-          response = await fetch(url, {
-            method: endpoint.method,
-            headers,
-            body: JSON.stringify(params),
-            agent
-          });
-        }
-
-        const duration = Date.now() - startTime;
-        const responseData = await response.text();
-
-        let parsedData;
         try {
-          parsedData = JSON.parse(responseData);
-        } catch {
-          parsedData = responseData;
-        }
+          if (endpoint.method === 'GET') {
+            const queryString = new URLSearchParams(params).toString();
+            url = queryString ? `${url}?${queryString}` : url;
 
-        // Extract token if auth endpoint
-        if (endpoint.category === 'auth' && response.ok) {
-          // Try to find token in response
-          if (parsedData.token) authToken = parsedData.token;
-          else if (parsedData.access_token) authToken = parsedData.access_token;
-          else if (parsedData.accessToken) authToken = parsedData.accessToken;
-        }
+            console.log(`    📡 GET ${url}`);
+            response = await axios.get(url, {
+              headers,
+              httpsAgent,
+              timeout: 30000
+            });
+          } else {
+            console.log(`    📡 ${endpoint.method} ${url}`);
+            response = await axios({
+              method: endpoint.method,
+              url,
+              headers,
+              data: params,
+              httpsAgent,
+              timeout: 30000
+            });
+          }
 
-        results.push({
-          endpoint_id: endpoint.id,
-          endpoint_path: endpoint.path,
-          method: endpoint.method,
-          success: response.ok,
-          status_code: response.status,
-          data: parsedData,
-          duration_ms: duration
-        });
+          const duration = Date.now() - startTime;
+          const parsedData = response.data;
 
-        // Save to database
-        await supabaseAdmin
-          .from('api_data')
-          .insert({
-            project_id: projectId,
-            api_id: apiId,
+          // Extract token if auth endpoint
+          if (endpoint.category === 'auth' && response.ok) {
+            // Try to find token in response
+            if (parsedData.token) authToken = parsedData.token;
+            else if (parsedData.access_token) authToken = parsedData.access_token;
+            else if (parsedData.accessToken) authToken = parsedData.accessToken;
+          }
+
+          results.push({
             endpoint_id: endpoint.id,
+            endpoint_path: endpoint.path,
+            method: endpoint.method,
+            success: true,
+            status_code: response.status,
             data: parsedData,
-            record_count: Array.isArray(parsedData) ? parsedData.length : 1,
-            execution_duration: duration,
-            status: response.ok ? 'success' : 'error'
+            duration_ms: duration
           });
 
-        console.log(`    ✅ ${endpoint.method} ${endpoint.path} - ${response.status}`);
+          // Save to database
+          await supabaseAdmin
+            .from('api_data')
+            .insert({
+              project_id: projectId,
+              api_id: apiId,
+              endpoint_id: endpoint.id,
+              data: parsedData,
+              record_count: Array.isArray(parsedData) ? parsedData.length : 1,
+              execution_duration: duration,
+              status: response.status >= 200 && response.status < 300 ? 'success' : 'error'
+            });
 
-      } catch (error) {
-        const duration = Date.now() - startTime;
-        console.error(`    ❌ ${endpoint.method} ${endpoint.path} - ${error.message}`);
-        console.error(`    🔍 Error details:`, {
-          name: error.name,
-          message: error.message,
-          cause: error.cause,
-          stack: error.stack?.split('\n')[0]
-        });
+          console.log(`    ✅ ${endpoint.method} ${endpoint.path} - ${response.status}`);
 
-        results.push({
-          endpoint_id: endpoint.id,
-          endpoint_path: endpoint.path,
-          method: endpoint.method,
-          success: false,
-          error: error.message,
-          error_details: {
-            name: error.name,
-            cause: error.cause?.toString()
-          },
-          duration_ms: duration
-        });
+        } catch (axiosError) {
+          const duration = Date.now() - startTime;
+          const error = axiosError.response ? {
+            message: `HTTP ${axiosError.response.status}: ${axiosError.response.statusText}`,
+            data: axiosError.response.data
+          } : axiosError;
+
+          console.error(`    ❌ ${endpoint.method} ${endpoint.path} - ${error.message || axiosError.message}`);
+          console.error(`    🔍 Error details:`, {
+            name: axiosError.name,
+            message: axiosError.message,
+            code: axiosError.code,
+            status: axiosError.response?.status
+          });
+
+          results.push({
+            endpoint_id: endpoint.id,
+            endpoint_path: endpoint.path,
+            method: endpoint.method,
+            success: false,
+            error: error.message || axiosError.message,
+            error_details: {
+              name: axiosError.name,
+              code: axiosError.code,
+              status: axiosError.response?.status
+            },
+            duration_ms: duration
+          });
+        }
       }
     }
 
