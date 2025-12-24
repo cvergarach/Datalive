@@ -124,6 +124,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
             // Save endpoints
             if (api.endpoints && savedApi) {
+              console.log(`  📌 Saving ${api.endpoints.length} endpoints...`);
               const endpointsToInsert = api.endpoints.map(ep => ({
                 api_id: savedApi.id,
                 project_id: projectId,
@@ -137,9 +138,19 @@ router.post('/upload', upload.single('file'), async (req, res) => {
                 execution_steps: ep.execution_steps
               }));
 
-              await supabaseAdmin
+              console.log(`  🔍 Endpoints to insert:`, JSON.stringify(endpointsToInsert, null, 2));
+
+              const { data: insertedEndpoints, error: endpointsError } = await supabaseAdmin
                 .from('api_endpoints')
-                .insert(endpointsToInsert);
+                .insert(endpointsToInsert)
+                .select();
+
+              if (endpointsError) {
+                console.error('  ❌ Error saving endpoints:', endpointsError);
+                throw endpointsError;
+              }
+
+              console.log(`  ✅ ${insertedEndpoints?.length || 0} endpoints saved successfully`);
             }
           }
         } else {
