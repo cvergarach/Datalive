@@ -175,7 +175,7 @@ export default function APIsPage() {
                                                 <div className="flex gap-2">
                                                     {apiItem.metadata?.auto_executable && (
                                                         <Button
-                                                            variant="default"
+                                                            variant="primary"
                                                             size="sm"
                                                             onClick={async () => {
                                                                 try {
