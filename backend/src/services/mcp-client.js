@@ -49,17 +49,17 @@ class MCPClient {
   }
 
   // API Analyzer Methods
-  async analyzeAPIDocument(geminiUri, projectId, mimeType) {
+  async analyzeAPIDocument(textContent, projectId, mimeType) {
     return this.call('apiAnalyzer', 'analyze_api_document', {
-      gemini_uri: geminiUri,
+      text_content: textContent,
       project_id: projectId,
       mime_type: mimeType
     });
   }
 
-  async extractEndpoints(geminiUri) {
+  async extractEndpoints(textContent) {
     return this.call('apiAnalyzer', 'extract_endpoints', {
-      gemini_uri: geminiUri
+      text_content: textContent
     });
   }
 

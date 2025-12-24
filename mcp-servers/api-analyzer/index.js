@@ -30,17 +30,17 @@ app.post('/mcp/call', async (req, res) => {
     const { tool, params } = req.body;
 
     if (tool === 'analyze_api_document') {
-      const result = await analyzeAPIDocument(params.gemini_uri, params.project_id, params.mime_type);
+      const result = await analyzeAPIDocument(params.text_content, params.project_id, params.mime_type);
       return res.json(result);
     }
 
     if (tool === 'extract_endpoints') {
-      const result = await extractEndpoints(params.gemini_uri);
+      const result = await extractEndpoints(params.text_content);
       return res.json(result);
     }
 
     if (tool === 'extract_auth_methods') {
-      const result = await extractAuthMethods(params.gemini_uri);
+      const result = await extractAuthMethods(params.text_content);
       return res.json(result);
     }
 
@@ -51,7 +51,7 @@ app.post('/mcp/call', async (req, res) => {
   }
 });
 
-async function analyzeAPIDocument(geminiUri, projectId, mimeType = 'application/pdf') {
+async function analyzeAPIDocument(textContent, projectId, mimeType = 'application/pdf') {
   const prompt = `🚨 CRITICAL TASK: Extract API Endpoints from Documentation 🚨
 
 YOU ARE AN EXPERT API DOCUMENTATION ANALYZER.
@@ -78,82 +78,6 @@ WHAT YOU'RE LOOKING FOR:
    ✓ "List all invoices" → GET /v1/invoices
 
 3. WHERE TO LOOK:
-   📍 Section headers: "API Reference", "Endpoints", "Resources"
-   📍 Code blocks: curl, Python, JavaScript, Ruby examples
-   📍 Tables with columns: "Method", "Endpoint", "Description"
-   📍 Lists: "Create X", "Retrieve X", "Update X", "Delete X", "List X"
-   📍 Navigation menus: Often list all resources
-   📍 URL patterns in text: /v1/..., /api/..., /resource/...
-
-═══════════════════════════════════════════════════════════════
-
-REAL EXAMPLE FROM STRIPE:
-
-INPUT TEXT:
-"The Stripe API is organized around REST. You can use the API in test mode.
-
-Create a customer
-POST /v1/customers
-
-Retrieve a customer  
-GET /v1/customers/:id
-
-List all customers
-GET /v1/customers
-
-Create a charge
-POST /v1/charges
-
-curl https://api.stripe.com/v1/customers \\
-  -u sk_test_123:
-
-stripe.customers.create()"
-
-YOUR OUTPUT MUST BE:
-{
-  "apis": [{
-    "name": "Stripe API",
-    "base_url": "https://api.stripe.com",
-    "endpoints": [
-      {"method": "POST", "path": "/v1/customers", "description": "Create a customer"},
-      {"method": "GET", "path": "/v1/customers/:id", "description": "Retrieve a customer"},
-      {"method": "GET", "path": "/v1/customers", "description": "List all customers"},
-      {"method": "POST", "path": "/v1/charges", "description": "Create a charge"}
-    ]
-  }]
-}
-
-═══════════════════════════════════════════════════════════════
-
-EXTRACTION ALGORITHM:
-
-STEP 1: Scan for HTTP methods
-→ Search for: GET, POST, PUT, DELETE, PATCH, OPTIONS
-→ Look 5 words before and after for paths starting with /
-
-STEP 2: Scan for common patterns
-→ "Create a X" = POST /v1/x
-→ "Retrieve X" = GET /v1/x/:id  
-→ "List X" = GET /v1/x
-→ "Update X" = PUT /v1/x/:id
-→ "Delete X" = DELETE /v1/x/:id
-
-STEP 3: Extract from code examples
-→ Find all curl commands
-→ Extract URL and method
-→ Find all SDK calls (stripe.X.Y())
-→ Map to REST endpoints
-
-STEP 4: Check tables
-→ Look for tables with "Endpoint" or "URL" columns
-→ Extract method + path from each row
-
-STEP 5: Validate
-→ Did you find at least 5 endpoints?
-→ NO? Go back and look harder!
-→ YES? Proceed to output
-
-═══════════════════════════════════════════════════════════════
 
 OUTPUT FORMAT (STRICT JSON):
 
@@ -231,22 +155,17 @@ RETURN VALID JSON ONLY.
 BEGIN ANALYSIS:`;
 
 
+  console.log('📥 Analyzing text content with Claude...');
+  console.log('🔍 DEBUG - Text content length:', textContent.length);
+  console.log('🔍 DEBUG - First 500 chars:', textContent.substring(0, 500));
 
-  // Note: Claude doesn't support direct file URIs like Gemini
-  // We need to fetch the file content first
-  console.log('📥 Fetching file content from Gemini URI...');
-  console.log('🔍 DEBUG - Prompt length:', prompt.length);
-  console.log('🔍 DEBUG - First 500 chars of prompt:', prompt.substring(0, 500));
-
-  // For now, we'll use the prompt directly with text content
-  // The backend should pass the actual text content instead of just URI
   const result = await claude.messages.create({
     model: modelName,
-    max_tokens: 8192, // Claude Haiku max output tokens
+    max_tokens: 8192,
     temperature: 0.4,
     messages: [{
       role: 'user',
-      content: prompt
+      content: `${prompt}\n\nDocument content:\n${textContent}`
     }]
   });
 

@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { supabase, supabaseAdmin } from '../config/supabase.js';
-import geminiService from '../services/gemini.js';
+import claudeService from '../services/claude.js';
 import mcpClient from '../services/mcp-client.js';
 import { authMiddleware, checkProjectAccess } from '../middleware/auth.js';
 import path from 'path';
@@ -46,13 +46,9 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
     uploadedFilePath = file.path;
 
-    // 1. Upload to Gemini File API
-    console.log('📤 Uploading file to Gemini...');
-    const geminiFile = await geminiService.uploadFile(
-      file.path,
-      title || file.originalname,
-      file.mimetype
-    );
+    // 1. Extract text from PDF
+    console.log('📄 Extracting text from document...');
+    const extraction = await claudeService.extractTextFromPDF(file.path);
 
     // 2. Save to database using Admin client to bypass RLS
     const { data: document, error: dbError } = await supabaseAdmin
@@ -60,29 +56,28 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       .insert({
         project_id: projectId,
         title: title || file.originalname,
-        gemini_uri: geminiFile.uri,
-        gemini_name: geminiFile.name,
+        text_content: extraction.text, // Store extracted text
         file_type: path.extname(file.originalname).toLowerCase(),
-        status: 'processing'
+        status: 'processing',
+        metadata: {
+          numPages: extraction.numPages,
+          info: extraction.info
+        }
       })
       .select()
       .single();
 
     if (dbError) throw dbError;
 
-    // 3. Wait for Gemini to process
-    console.log('⏳ Waiting for Gemini to process file...');
-    await geminiService.waitForFileActive(geminiFile.name);
-
-    // 4. Update status to analyzed
+    // 3. Update status to analyzed
     await supabaseAdmin
       .from('api_documents')
       .update({ status: 'analyzed' })
       .eq('id', document.id);
 
-    // 5. Start async analysis with MCP
+    // 4. Start async analysis with MCP (pass text content instead of URI)
     console.log('🤖 Starting API analysis...');
-    mcpClient.analyzeAPIDocument(geminiFile.uri, projectId, geminiFile.mimeType)
+    mcpClient.analyzeAPIDocument(extraction.text, projectId, file.mimetype)
       .then(async (analysis) => {
         console.log('✅ Analysis complete');
         console.log('📦 Full analysis response:', JSON.stringify(analysis, null, 2));
