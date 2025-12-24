@@ -481,6 +481,18 @@ router.post('/:apiId/auto-execute', async (req, res) => {
             duration_ms: duration
           });
         }
+      } catch (error) {
+        // Catch any errors that occur outside the axios request but within the endpoint loop
+        const duration = Date.now() - startTime;
+        console.error(`    ❌ Error processing endpoint ${endpoint.path}:`, error);
+        results.push({
+          endpoint_id: endpoint.id,
+          endpoint_path: endpoint.path,
+          method: endpoint.method,
+          success: false,
+          error: error.message,
+          duration_ms: duration
+        });
       }
     }
 
