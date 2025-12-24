@@ -63,8 +63,9 @@ export function ConfigureApiModal({
     if (!isOpen) return null;
 
     const renderAuthFields = () => {
-        const type = apiItem.auth_type?.toLowerCase() || 'api_key';
+        const type = apiItem.auth_type?.toLowerCase() || 'none';
 
+        // API Key or Bearer Token
         if (type === 'api_key' || type === 'bearer') {
             return (
                 <div className="space-y-2">
@@ -84,9 +85,121 @@ export function ConfigureApiModal({
             );
         }
 
+        // Ticket-based auth (like Mercado Público)
+        if (type === 'ticket' || type === 'ticket_based') {
+            return (
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium flex items-center gap-2">
+                            <Key className="h-4 w-4 text-gray-400" />
+                            Access Ticket
+                        </label>
+                        <input
+                            type="password"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            placeholder="Enter your access ticket"
+                            value={credentials.ticket || ''}
+                            onChange={(e) => setCredentials({ ...credentials, ticket: e.target.value })}
+                            autoFocus
+                        />
+                    </div>
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-xs text-blue-700">
+                            💡 <strong>Tip:</strong> The ticket will be added as a URL parameter to all requests
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        // Basic Auth
+        if (type === 'basic') {
+            return (
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Username</label>
+                        <input
+                            type="text"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Enter username"
+                            value={credentials.username || ''}
+                            onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+                            autoFocus
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Password</label>
+                        <input
+                            type="password"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Enter password"
+                            value={credentials.password || ''}
+                            onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                        />
+                    </div>
+                </div>
+            );
+        }
+
+        // OAuth
+        if (type === 'oauth' || type === 'oauth2') {
+            return (
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Client ID</label>
+                        <input
+                            type="text"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Enter client ID"
+                            value={credentials.client_id || ''}
+                            onChange={(e) => setCredentials({ ...credentials, client_id: e.target.value })}
+                            autoFocus
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Client Secret</label>
+                        <input
+                            type="password"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Enter client secret"
+                            value={credentials.client_secret || ''}
+                            onChange={(e) => setCredentials({ ...credentials, client_secret: e.target.value })}
+                        />
+                    </div>
+                </div>
+            );
+        }
+
+        // No auth required
+        if (type === 'none') {
+            return (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                    ✅ No authentication required for this API
+                </div>
+            );
+        }
+
+        // Unknown/Custom auth type
         return (
-            <div className="p-4 bg-gray-50 rounded-lg text-sm text-gray-500 italic">
-                No extra parameters required for {type} auth.
+            <div className="space-y-4">
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+                    ⚠️ Custom authentication type: <strong>{type}</strong>
+                </div>
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Credentials (JSON)</label>
+                    <textarea
+                        className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        placeholder='{"key": "value"}'
+                        value={typeof credentials === 'string' ? credentials : JSON.stringify(credentials, null, 2)}
+                        onChange={(e) => {
+                            try {
+                                setCredentials(JSON.parse(e.target.value));
+                            } catch {
+                                setCredentials(e.target.value);
+                            }
+                        }}
+                    />
+                </div>
             </div>
         );
     };
@@ -146,7 +259,7 @@ export function ConfigureApiModal({
                     </Button>
                     <Button
                         onClick={handleConfigure}
-                        disabled={loading || (!credentials.api_key && apiItem.auth_type !== 'none')}
+                        disabled={loading || (apiItem.auth_type !== 'none' && Object.keys(credentials).length === 0)}
                     >
                         {loading ? (
                             <>
