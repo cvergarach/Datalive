@@ -420,7 +420,7 @@ router.post('/:apiId/auto-execute', async (req, res) => {
           const parsedData = response.data;
 
           // Extract token if auth endpoint
-          if (endpoint.category === 'auth' && response.ok) {
+          if (endpoint.category === 'auth' && response.status >= 200 && response.status < 300) {
             // Try to find token in response
             if (parsedData.token) authToken = parsedData.token;
             else if (parsedData.access_token) authToken = parsedData.access_token;
