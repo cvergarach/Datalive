@@ -21,6 +21,7 @@ import {
     Lightbulb
 } from 'lucide-react';
 import { ConfigureApiModal } from '@/components/shared/ConfigureApiModal';
+import { ExecuteEndpointModal } from '@/components/shared/ExecuteEndpointModal';
 
 export default function APIsPage() {
     const [projects, setProjects] = useState<any[]>([]);
@@ -32,6 +33,11 @@ export default function APIsPage() {
     // Configuration state
     const [configModalOpen, setConfigModalOpen] = useState(false);
     const [apiToConfigure, setApiToConfigure] = useState<any | null>(null);
+
+    // Execute state
+    const [executeModalOpen, setExecuteModalOpen] = useState(false);
+    const [endpointToExecute, setEndpointToExecute] = useState<any | null>(null);
+    const [selectedApiForExecution, setSelectedApiForExecution] = useState<string | null>(null);
 
     useEffect(() => {
         fetchProjects();
@@ -284,8 +290,9 @@ export default function APIsPage() {
                                                                                 variant="outline"
                                                                                 className="flex items-center gap-1.5"
                                                                                 onClick={() => {
-                                                                                    // TODO: Open execute modal
-                                                                                    alert(`Execute ${ep.method} ${ep.path}`);
+                                                                                    setEndpointToExecute(ep);
+                                                                                    setSelectedApiForExecution(apiItem.id);
+                                                                                    setExecuteModalOpen(true);
                                                                                 }}
                                                                             >
                                                                                 <Zap className="h-3.5 w-3.5" />
@@ -320,6 +327,25 @@ export default function APIsPage() {
                         }}
                         projectId={selectedProjectId}
                         apiItem={apiToConfigure}
+                    />
+                )}
+
+                {/* Execute Endpoint Modal */}
+                {endpointToExecute && selectedApiForExecution && (
+                    <ExecuteEndpointModal
+                        isOpen={executeModalOpen}
+                        onClose={() => {
+                            setExecuteModalOpen(false);
+                            setEndpointToExecute(null);
+                            setSelectedApiForExecution(null);
+                        }}
+                        onSuccess={(result) => {
+                            console.log('Execution result:', result);
+                            // Optionally refresh data or show success message
+                        }}
+                        projectId={selectedProjectId}
+                        apiId={selectedApiForExecution}
+                        endpoint={endpointToExecute}
                     />
                 )}
             </div>
