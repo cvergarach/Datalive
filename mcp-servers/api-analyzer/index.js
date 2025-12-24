@@ -40,35 +40,64 @@ app.post('/mcp/call', async (req, res) => {
 });
 
 async function analyzeAPIDocument(geminiUri, projectId, mimeType = 'application/pdf') {
-  const prompt = `You are an expert API documentation analyzer. Your ONLY job is to find and extract API endpoints.
+  const prompt = `🚨 CRITICAL TASK: Extract API Endpoints from Documentation 🚨
 
-STEP 1: Find the Base URL
-Look for patterns like:
-- "https://api.stripe.com"
-- "Base URL: https://api.example.com"
-- In curl examples: curl https://api.stripe.com/v1/charges
+YOU ARE AN EXPERT API DOCUMENTATION ANALYZER.
+YOUR SUCCESS IS MEASURED BY HOW MANY ENDPOINTS YOU EXTRACT.
+RETURNING EMPTY endpoints:[] IS A FAILURE.
 
-STEP 2: Find ALL Endpoints
-Endpoints look like this in documentation:
-- "POST /v1/customers" 
-- "GET /v1/charges/:id"
-- "DELETE /v1/subscriptions/{subscription_id}"
-- curl -X POST https://api.stripe.com/v1/payment_intents
-- stripe.customers.create() → maps to POST /v1/customers
-- stripe.charges.retrieve(id) → maps to GET /v1/charges/:id
+═══════════════════════════════════════════════════════════════
 
-WHERE TO LOOK:
-1. Section titles: "API Reference", "Endpoints", "Resources", "REST API"
-2. Code examples (curl, Python, JavaScript, Ruby)
-3. Tables with "Method" and "Endpoint" columns
-4. Lists of operations like "Create a customer", "Retrieve a charge"
+WHAT YOU'RE LOOKING FOR:
 
-EXAMPLE INPUT:
-"Create a customer: POST /v1/customers
-Retrieve a customer: GET /v1/customers/:id
-List all customers: GET /v1/customers"
+1. BASE URL - Examples:
+   ✓ "https://api.stripe.com"
+   ✓ "Base URL: https://api.example.com/v1"
+   ✓ Found in curl: curl https://api.stripe.com/v1/charges
 
-EXAMPLE OUTPUT:
+2. ENDPOINTS - They look like this:
+   ✓ "POST /v1/customers"
+   ✓ "GET /v1/charges/:id"
+   ✓ "DELETE /v1/subscriptions/{id}"
+   ✓ curl -X POST https://api.stripe.com/v1/payment_intents
+   ✓ stripe.customers.create() → POST /v1/customers
+   ✓ stripe.charges.retrieve(id) → GET /v1/charges/:id
+   ✓ "Create a customer" → POST /v1/customers
+   ✓ "List all invoices" → GET /v1/invoices
+
+3. WHERE TO LOOK:
+   📍 Section headers: "API Reference", "Endpoints", "Resources"
+   📍 Code blocks: curl, Python, JavaScript, Ruby examples
+   📍 Tables with columns: "Method", "Endpoint", "Description"
+   📍 Lists: "Create X", "Retrieve X", "Update X", "Delete X", "List X"
+   📍 Navigation menus: Often list all resources
+   📍 URL patterns in text: /v1/..., /api/..., /resource/...
+
+═══════════════════════════════════════════════════════════════
+
+REAL EXAMPLE FROM STRIPE:
+
+INPUT TEXT:
+"The Stripe API is organized around REST. You can use the API in test mode.
+
+Create a customer
+POST /v1/customers
+
+Retrieve a customer  
+GET /v1/customers/:id
+
+List all customers
+GET /v1/customers
+
+Create a charge
+POST /v1/charges
+
+curl https://api.stripe.com/v1/customers \\
+  -u sk_test_123:
+
+stripe.customers.create()"
+
+YOUR OUTPUT MUST BE:
 {
   "apis": [{
     "name": "Stripe API",
@@ -76,43 +105,118 @@ EXAMPLE OUTPUT:
     "endpoints": [
       {"method": "POST", "path": "/v1/customers", "description": "Create a customer"},
       {"method": "GET", "path": "/v1/customers/:id", "description": "Retrieve a customer"},
-      {"method": "GET", "path": "/v1/customers", "description": "List all customers"}
+      {"method": "GET", "path": "/v1/customers", "description": "List all customers"},
+      {"method": "POST", "path": "/v1/charges", "description": "Create a charge"}
     ]
   }]
 }
 
-RETURN FORMAT (STRICT JSON):
+═══════════════════════════════════════════════════════════════
+
+EXTRACTION ALGORITHM:
+
+STEP 1: Scan for HTTP methods
+→ Search for: GET, POST, PUT, DELETE, PATCH, OPTIONS
+→ Look 5 words before and after for paths starting with /
+
+STEP 2: Scan for common patterns
+→ "Create a X" = POST /v1/x
+→ "Retrieve X" = GET /v1/x/:id  
+→ "List X" = GET /v1/x
+→ "Update X" = PUT /v1/x/:id
+→ "Delete X" = DELETE /v1/x/:id
+
+STEP 3: Extract from code examples
+→ Find all curl commands
+→ Extract URL and method
+→ Find all SDK calls (stripe.X.Y())
+→ Map to REST endpoints
+
+STEP 4: Check tables
+→ Look for tables with "Endpoint" or "URL" columns
+→ Extract method + path from each row
+
+STEP 5: Validate
+→ Did you find at least 5 endpoints?
+→ NO? Go back and look harder!
+→ YES? Proceed to output
+
+═══════════════════════════════════════════════════════════════
+
+OUTPUT FORMAT (STRICT JSON):
+
 {
   "apis": [{
-    "name": "API Name",
-    "description": "What this API does",
+    "name": "API Name (e.g., Stripe API)",
+    "description": "Brief description",
     "base_url": "https://api.example.com",
-    "auth_type": "api_key",
-    "auth_details": {"header_name": "Authorization", "format": "Bearer TOKEN"},
+    "auth_type": "api_key|bearer|basic|oauth|none",
+    "auth_details": {
+      "header_name": "Authorization",
+      "format": "Bearer TOKEN",
+      "guide": "How to get credentials"
+    },
     "execution_strategy": "How to use this API",
     "endpoints": [
       {
         "method": "GET|POST|PUT|DELETE|PATCH",
         "path": "/v1/resource",
         "description": "What this endpoint does",
-        "parameters": [{"name": "id", "type": "string", "required": true}],
-        "response_schema": {},
-        "category": "data_fetch",
-        "estimated_value": "high",
-        "execution_steps": "How to call it"
+        "parameters": [
+          {"name": "id", "type": "string", "required": true, "description": "Resource ID"}
+        ],
+        "response_schema": {"example": "response"},
+        "category": "data_fetch|data_modify|auth|other",
+        "estimated_value": "high|medium|low",
+        "execution_steps": "Step by step how to call"
       }
     ]
   }]
 }
 
-CRITICAL RULES:
-1. You MUST extract at least 5-10 endpoints if they exist
-2. If you see "Create", "Retrieve", "Update", "Delete", "List" → those are endpoints
-3. Look for HTTP methods (GET, POST, PUT, DELETE, PATCH) followed by paths
-4. Check EVERY code example for endpoint paths
-5. DO NOT return empty endpoints:[] unless there are ZERO API endpoints in the entire document
+═══════════════════════════════════════════════════════════════
 
-NOW ANALYZE THE DOCUMENT AND EXTRACT ALL ENDPOINTS.`;
+🚨 CRITICAL SUCCESS CRITERIA:
+
+✅ MINIMUM 10 endpoints extracted (if documentation has them)
+✅ Each endpoint has method + path
+✅ Base URL identified
+✅ Auth type detected
+
+❌ FAILURE CONDITIONS:
+❌ Returning {"apis": []} when endpoints exist
+❌ Returning endpoints:[] when documentation clearly has endpoints
+❌ Extracting fewer than 5 endpoints from comprehensive docs
+❌ Missing obvious endpoints mentioned in titles/headers
+
+═══════════════════════════════════════════════════════════════
+
+SPECIAL INSTRUCTIONS:
+
+1. If you see "API Reference" section → EXTRACT EVERYTHING FROM IT
+2. If you see curl examples → EXTRACT THE ENDPOINT
+3. If you see SDK calls → CONVERT TO REST ENDPOINT
+4. If you see "Create/Retrieve/Update/Delete/List" → IT'S AN ENDPOINT
+5. If unsure about a path → INCLUDE IT (better to have false positives)
+
+6. For Stripe specifically:
+   - Look for /v1/customers, /v1/charges, /v1/payment_intents
+   - Look for /v1/invoices, /v1/subscriptions, /v1/products
+   - Look for /v1/prices, /v1/coupons, /v1/refunds
+
+7. For any API:
+   - Common patterns: /api/v1/..., /v1/..., /v2/...
+   - Resources are usually plural: /users, /products, /orders
+   - Detail endpoints have :id or {id}: /users/:id
+
+═══════════════════════════════════════════════════════════════
+
+NOW ANALYZE THE DOCUMENT BELOW.
+EXTRACT EVERY SINGLE ENDPOINT YOU CAN FIND.
+DO NOT SKIP ANY.
+RETURN VALID JSON ONLY.
+
+BEGIN ANALYSIS:`;
 
 
 
@@ -120,7 +224,7 @@ NOW ANALYZE THE DOCUMENT AND EXTRACT ALL ENDPOINTS.`;
     model: modelName,
     config: {
       maxOutputTokens: 16384, // Increased to prevent truncation
-      temperature: 0.2 // Slightly higher to encourage finding more endpoints
+      temperature: 0.4 // Higher temperature to encourage aggressive endpoint extraction
     },
     contents: [
       {
