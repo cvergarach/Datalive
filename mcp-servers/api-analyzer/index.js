@@ -1,5 +1,5 @@
 import express from 'express';
-import { GoogleGenAI } from '@google/genai';
+import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -9,8 +9,20 @@ const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 
-const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const modelName = 'gemini-2.5-flash'; // High-performance latest model
+// Claude client
+const claude = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
+
+// Model selection via environment variable
+// CLAUDE_MODEL=haiku (cheap, fast) or CLAUDE_MODEL=sonnet (expensive, better)
+const MODEL_MAP = {
+  'haiku': 'claude-3-5-haiku-20241022',    // $1 per 1M input tokens, $5 per 1M output
+  'sonnet': 'claude-3-5-sonnet-20241022'   // $3 per 1M input tokens, $15 per 1M output
+};
+
+const selectedModel = process.env.CLAUDE_MODEL || 'haiku'; // Default to cheaper model
+const modelName = MODEL_MAP[selectedModel];
+
+console.log(`🤖 Using Claude model: ${selectedModel} (${modelName})`);
 
 // MCP Tool: Analyze API Documentation
 app.post('/mcp/call', async (req, res) => {
@@ -220,82 +232,69 @@ BEGIN ANALYSIS:`;
 
 
 
-  const result = await client.models.generateContent({
+  // Note: Claude doesn't support direct file URIs like Gemini
+  // We need to fetch the file content first
+  console.log('📥 Fetching file content from Gemini URI...');
+
+  // For now, we'll use the prompt directly with text content
+  // The backend should pass the actual text content instead of just URI
+  const result = await claude.messages.create({
     model: modelName,
-    config: {
-      maxOutputTokens: 16384, // Increased to prevent truncation
-      temperature: 0.4 // Higher temperature to encourage aggressive endpoint extraction
-    },
-    contents: [
-      {
-        role: 'user',
-        parts: [
-          {
-            fileData: {
-              fileUri: geminiUri,
-              mimeType: mimeType
-            }
-          },
-          { text: prompt }
-        ]
-      }
-    ]
+    max_tokens: 16384,
+    temperature: 0.4,
+    messages: [{
+      role: 'user',
+      content: prompt
+    }]
   });
 
+  console.log('🤖 Claude Response received!');
+  console.log('📊 Metadata:', {
+    model: result.model,
+    stopReason: result.stop_reason,
+    usage: result.usage
+  });
+
+  // Extract text from Claude response
+  const responseText = result.content[0].text;
+
+  console.log('🧹 Cleaning response...');
+
+  // Remove markdown code blocks if present
+  let cleanedText = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+
+  // Try to parse JSON
+  let parsedContent;
   try {
-    let text = result.text;
-
-    console.log('🤖 Gemini Response received!');
-    console.log('📊 Metadata:', {
-      length: text.length,
-      finishReason: result.candidates?.[0]?.finishReason,
-      usage: result.usageMetadata
-    });
-
-    // Clean markdown if present
-    if (text.includes('```')) {
-      console.log('🧹 Removing markdown code blocks...');
-      text = text.replace(/```json\n?|```/g, '').trim();
-    }
-
-    // Try direct parse first
-    try {
-      const parsed = JSON.parse(text);
-      console.log('✅ Successfully parsed JSON directly');
-      console.log('📋 Parsed content:', JSON.stringify(parsed, null, 2));
-
-      // Check if we got empty results
-      if (!parsed.apis || parsed.apis.length === 0) {
-        console.error('⚠️ WARNING: Gemini returned empty APIs array!');
-        console.log('📝 Full response text:', text);
-      }
-
-      return parsed;
-    } catch (innerError) {
-      console.error('❌ First JSON parse failed, attempting fuzzy clean...');
-      console.log('📝 First 1000 chars of response:', text.slice(0, 1000));
-
-      // Try to find first { and last }
-      const start = text.indexOf('{');
-      const end = text.lastIndexOf('}');
-      if (start !== -1 && end !== -1) {
-        text = text.slice(start, end + 1);
-        console.log('🔧 Attempting to parse extracted JSON...');
-        const parsed = JSON.parse(text);
-        console.log('✅ Successfully parsed after extraction');
-        return parsed;
-      }
-      throw innerError;
-    }
+    parsedContent = JSON.parse(cleanedText);
+    console.log('✅ Successfully parsed JSON directly');
   } catch (parseError) {
-    console.error('❌ Failed to parse Gemini response as JSON:', parseError);
-    console.log('📝 Full response preview (first 1000 chars):', (result.text || '').slice(0, 1000));
-    return {
-      apis: [],
-      error: 'API extraction failed to produce valid data. The document might not contain recognizable API endpoints or the format was too complex.',
-      raw: (result.text || '').slice(0, 500)
-    };
+    console.log('⚠️ Failed to parse, attempting to extract JSON...');
+
+    // Try to find JSON object in the text
+    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        parsedContent = JSON.parse(jsonMatch[0]);
+        console.log('✅ Extracted and parsed JSON from response');
+      } catch (e) {
+        console.error('❌ Could not parse extracted JSON:', e.message);
+        throw new Error('Failed to parse API analysis response');
+      }
+    } else {
+      console.error('❌ No JSON found in response');
+      throw new Error('No valid JSON in API analysis response');
+    }
   }
+
+  console.log('📋 Parsed content:', JSON.stringify(parsedContent, null, 2));
+
+  // Check if we got empty results
+  if (!parsedContent.apis || parsedContent.apis.length === 0) {
+    console.error('⚠️ WARNING: Claude returned empty APIs array!');
+  }
+
+  return parsedContent;
 }
 
 async function extractEndpoints(geminiUri) {
