@@ -173,27 +173,6 @@ export default function APIsPage() {
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-2">
-                                                    {apiItem.metadata?.auto_executable && (
-                                                        <Button
-                                                            variant="primary"
-                                                            size="sm"
-                                                            onClick={async () => {
-                                                                try {
-                                                                    setLoading(true);
-                                                                    const { data } = await api.post(`/projects/${selectedProjectId}/apis/${apiItem.id}/auto-execute`);
-                                                                    alert(`✅ Auto-execution completed!\n${data.message}\n\nCheck the Data page to see results.`);
-                                                                    fetchApis(selectedProjectId);
-                                                                } catch (error: any) {
-                                                                    alert(`❌ Error: ${error.response?.data?.error || error.message}`);
-                                                                } finally {
-                                                                    setLoading(false);
-                                                                }
-                                                            }}
-                                                        >
-                                                            <Zap className="h-4 w-4 mr-2" />
-                                                            Auto-Execute All
-                                                        </Button>
-                                                    )}
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
