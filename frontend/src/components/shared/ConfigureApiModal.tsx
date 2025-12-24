@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Settings, Loader2, CheckCircle2, AlertCircle, Key, Shield } from 'lucide-react';
+import { Settings, Loader2, CheckCircle2, AlertCircle, Key, Shield, Globe } from 'lucide-react';
 
 interface ConfigureApiModalProps {
     isOpen: boolean;
@@ -217,6 +217,23 @@ export function ConfigureApiModal({
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                    {/* Base URL Display/Edit */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-gray-400" />
+                            Base URL
+                        </label>
+                        <input
+                            type="text"
+                            className="flex h-10 w-full rounded-md border border-input bg-gray-50 px-3 py-2 text-sm font-mono"
+                            value={apiItem.base_url}
+                            disabled
+                        />
+                        <p className="text-xs text-gray-500">
+                            💡 This is the base URL for all API requests
+                        </p>
+                    </div>
+
                     <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-100 dark:border-blue-900/50">
                         <Shield className="h-5 w-5 text-blue-600" />
                         <div className="text-xs">
