@@ -69,30 +69,17 @@ router.post('/:apiId/configure', async (req, res) => {
     const { projectId, apiId } = req.params;
     const { credentials } = req.body;
 
-    // Get API info
-    const { data: api, error: apiError } = await supabaseAdmin
-      .from('discovered_apis')
-      .select('base_url, auth_type')
-      .eq('id', apiId)
-      .single();
+    console.log(`🔑 Configuring API ${apiId}`);
 
-    if (apiError) throw apiError;
-
-    // Test connection
-    const testResult = await mcpClient.testAPIConnection(api.base_url, {
-      type: api.auth_type,
-      credentials
-    });
-
-    // Save configuration (always mark as active, user can test manually)
+    // Save configuration directly (no testing, keep it simple)
     const { data: config, error: configError } = await supabaseAdmin
       .from('api_configurations')
       .upsert({
         api_id: apiId,
         credentials,
-        is_active: true, // Always active, let user test manually
+        is_active: true,
         last_tested: new Date().toISOString(),
-        test_status: testResult.success ? 'success' : 'failed'
+        test_status: 'pending'
       }, {
         onConflict: 'api_id'
       })
@@ -102,11 +89,11 @@ router.post('/:apiId/configure', async (req, res) => {
     if (configError) throw configError;
 
     res.json({
-      message: testResult.success ? 'API configured successfully' : 'Configuration saved but test failed',
-      config,
-      test_result: testResult
+      message: 'API configured successfully',
+      config
     });
   } catch (error) {
+    console.error('❌ Configure error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -118,9 +105,9 @@ router.post('/:apiId/configure', async (req, res) => {
 router.post('/:apiId/execute', async (req, res) => {
   try {
     const { projectId, apiId } = req.params;
-    const { endpoint_ids, parameters } = req.body;
+    const { endpoint_id, parameters } = req.body; // Single endpoint, not array
 
-    console.log(`🚀 Executing endpoint for API ${apiId}`);
+    console.log(`🚀 Executing endpoint ${endpoint_id} for API ${apiId}`);
 
     // Get API details
     const { data: api, error: apiError } = await supabaseAdmin
@@ -145,125 +132,120 @@ router.post('/:apiId/execute', async (req, res) => {
       return res.status(400).json({ error: 'API not configured. Please configure credentials first.' });
     }
 
-    // Get endpoints
-    const { data: endpoints, error: endpointsError } = await supabaseAdmin
+    // Get the specific endpoint
+    const { data: endpoint, error: endpointError } = await supabaseAdmin
       .from('api_endpoints')
       .select('*')
-      .eq('api_id', apiId)
-      .in('id', endpoint_ids || []);
+      .eq('id', endpoint_id)
+      .single();
 
-    if (endpointsError) throw endpointsError;
-
-    if (!endpoints || endpoints.length === 0) {
-      return res.status(404).json({ error: 'No endpoints found' });
+    if (endpointError || !endpoint) {
+      return res.status(404).json({ error: 'Endpoint not found' });
     }
 
-    // Execute each endpoint
-    const results = [];
-    for (const endpoint of endpoints) {
-      const startTime = Date.now();
+    const startTime = Date.now();
 
-      try {
-        // Build URL
-        let url = `${api.base_url}${endpoint.path}`;
+    try {
+      // Build URL
+      let url = `${api.base_url}${endpoint.path}`;
 
-        // Build headers
-        const headers = {
-          'Content-Type': 'application/json'
-        };
+      // Build headers
+      const headers = {
+        'Content-Type': 'application/json'
+      };
 
-        // Add auth
-        if (api.auth_type === 'basic' && config.credentials.username && config.credentials.password) {
-          const auth = Buffer.from(`${config.credentials.username}:${config.credentials.password}`).toString('base64');
-          headers['Authorization'] = `Basic ${auth}`;
-        } else if (api.auth_type === 'bearer' && config.credentials.api_key) {
-          headers['Authorization'] = `Bearer ${config.credentials.api_key}`;
-        } else if (api.auth_type === 'api_key' && config.credentials.api_key) {
-          headers['X-API-Key'] = config.credentials.api_key;
-        }
+      // Add auth
+      if (api.auth_type === 'basic' && config.credentials.username && config.credentials.password) {
+        const auth = Buffer.from(`${config.credentials.username}:${config.credentials.password}`).toString('base64');
+        headers['Authorization'] = `Basic ${auth}`;
+      } else if (api.auth_type === 'bearer' && config.credentials.api_key) {
+        headers['Authorization'] = `Bearer ${config.credentials.api_key}`;
+      } else if (api.auth_type === 'api_key' && config.credentials.api_key) {
+        headers['X-API-Key'] = config.credentials.api_key;
+      }
 
-        // Add parameters
-        const requestParams = { ...parameters };
+      // Add parameters
+      const requestParams = { ...parameters };
 
-        // For ticket auth, add ticket to params
-        if (api.auth_type === 'ticket' && config.credentials.ticket) {
-          requestParams.ticket = config.credentials.ticket;
-        }
+      // For ticket auth, add ticket to params
+      if (api.auth_type === 'ticket' && config.credentials.ticket) {
+        requestParams.ticket = config.credentials.ticket;
+      }
 
-        // Make request
-        let response;
+      // Make request
+      let response;
 
-        // Create agent for HTTPS with self-signed certificates
-        const agent = api.base_url.startsWith('https')
-          ? new (await import('https')).Agent({ rejectUnauthorized: false })
-          : undefined;
+      // Create agent for HTTPS with self-signed certificates
+      const agent = api.base_url.startsWith('https')
+        ? new (await import('https')).Agent({ rejectUnauthorized: false })
+        : undefined;
 
-        if (endpoint.method === 'GET') {
-          const queryString = new URLSearchParams(requestParams).toString();
-          url = queryString ? `${url}?${queryString}` : url;
+      if (endpoint.method === 'GET') {
+        const queryString = new URLSearchParams(requestParams).toString();
+        url = queryString ? `${url}?${queryString}` : url;
 
-          console.log(`📡 GET ${url}`);
-          response = await fetch(url, { headers, agent });
-        } else {
-          console.log(`📡 ${endpoint.method} ${url}`);
-          response = await fetch(url, {
-            method: endpoint.method,
-            headers,
-            body: JSON.stringify(requestParams),
-            agent
-          });
-        }
-
-        const duration = Date.now() - startTime;
-        const responseData = await response.text();
-
-        let parsedData;
-        try {
-          parsedData = JSON.parse(responseData);
-        } catch {
-          parsedData = responseData;
-        }
-
-        results.push({
-          endpoint_id: endpoint.id,
-          success: response.ok,
-          status_code: response.status,
-          data: parsedData,
-          duration_ms: duration
-        });
-
-        // Save to database
-        await supabaseAdmin
-          .from('api_data')
-          .insert({
-            project_id: projectId,
-            api_id: apiId,
-            endpoint_id: endpoint.id,
-            data: parsedData,
-            record_count: Array.isArray(parsedData) ? parsedData.length : 1,
-            execution_duration: duration,
-            status: response.ok ? 'success' : 'error'
-          });
-
-      } catch (error) {
-        const duration = Date.now() - startTime;
-        results.push({
-          endpoint_id: endpoint.id,
-          success: false,
-          error: error.message,
-          duration_ms: duration
+        console.log(`📡 GET ${url}`);
+        response = await fetch(url, { headers, agent });
+      } else {
+        console.log(`📡 ${endpoint.method} ${url}`);
+        response = await fetch(url, {
+          method: endpoint.method,
+          headers,
+          body: JSON.stringify(requestParams),
+          agent
         });
       }
+
+      const duration = Date.now() - startTime;
+      const responseData = await response.text();
+
+      let parsedData;
+      try {
+        parsedData = JSON.parse(responseData);
+      } catch {
+        parsedData = responseData;
+      }
+
+      results.push({
+        endpoint_id: endpoint.id,
+        success: response.ok,
+        status_code: response.status,
+        data: parsedData,
+        duration_ms: duration
+      });
+
+      // Save to database
+      await supabaseAdmin
+        .from('api_data')
+        .insert({
+          project_id: projectId,
+          api_id: apiId,
+          endpoint_id: endpoint.id,
+          data: parsedData,
+          record_count: Array.isArray(parsedData) ? parsedData.length : 1,
+          execution_duration: duration,
+          status: response.ok ? 'success' : 'error'
+        });
+
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      results.push({
+        endpoint_id: endpoint.id,
+        success: false,
+        error: error.message,
+        duration_ms: duration
+      });
     }
+  }
 
     res.json({
-      message: 'Execution completed',
-      results
-    });
-  } catch (error) {
-    console.error('❌ Execution error:', error);
-    res.status(500).json({ error: error.message });
-  }
+    message: 'Execution completed',
+    results
+  });
+} catch (error) {
+  console.error('❌ Execution error:', error);
+  res.status(500).json({ error: error.message });
+}
 });
 
 /**
