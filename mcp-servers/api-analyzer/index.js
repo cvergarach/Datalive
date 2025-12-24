@@ -235,6 +235,8 @@ BEGIN ANALYSIS:`;
   // Note: Claude doesn't support direct file URIs like Gemini
   // We need to fetch the file content first
   console.log('📥 Fetching file content from Gemini URI...');
+  console.log('🔍 DEBUG - Prompt length:', prompt.length);
+  console.log('🔍 DEBUG - First 500 chars of prompt:', prompt.substring(0, 500));
 
   // For now, we'll use the prompt directly with text content
   // The backend should pass the actual text content instead of just URI
@@ -258,6 +260,8 @@ BEGIN ANALYSIS:`;
   // Extract text from Claude response
   const responseText = result.content[0].text;
 
+  console.log('🔍 DEBUG - Response length:', responseText.length);
+  console.log('🔍 DEBUG - Full response:', responseText);
   console.log('🧹 Cleaning response...');
 
   // Remove markdown code blocks if present
