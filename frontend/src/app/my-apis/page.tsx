@@ -233,18 +233,19 @@ export default function APIsPage() {
                                                                 <th className="px-6 py-4">Endpoint</th>
                                                                 <th className="px-6 py-4 w-1/2">Description</th>
                                                                 <th className="px-6 py-4">Value</th>
+                                                                <th className="px-6 py-4">Actions</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody className="divide-y divide-gray-100">
                                                             {!apiItem.endpoints ? (
                                                                 <tr>
-                                                                    <td colSpan={4} className="px-6 py-10 text-center text-gray-400 italic">
+                                                                    <td colSpan={5} className="px-6 py-10 text-center text-gray-400 italic">
                                                                         Loading endpoints...
                                                                     </td>
                                                                 </tr>
                                                             ) : apiItem.endpoints.length === 0 ? (
                                                                 <tr>
-                                                                    <td colSpan={4} className="px-6 py-10 text-center text-gray-400 italic">
+                                                                    <td colSpan={5} className="px-6 py-10 text-center text-gray-400 italic">
                                                                         No endpoints found for this API.
                                                                     </td>
                                                                 </tr>
@@ -276,6 +277,20 @@ export default function APIsPage() {
                                                                             <span className="flex items-center text-amber-600 font-bold">
                                                                                 <Zap className="h-3 w-3 mr-1" /> {ep.estimated_value}
                                                                             </span>
+                                                                        </td>
+                                                                        <td className="px-6 py-4">
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="outline"
+                                                                                className="flex items-center gap-1.5"
+                                                                                onClick={() => {
+                                                                                    // TODO: Open execute modal
+                                                                                    alert(`Execute ${ep.method} ${ep.path}`);
+                                                                                }}
+                                                                            >
+                                                                                <Zap className="h-3.5 w-3.5" />
+                                                                                Execute
+                                                                            </Button>
                                                                         </td>
                                                                     </tr>
                                                                 ))
