@@ -16,6 +16,11 @@ const claude = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 
 // Model selection via environment variable
 // CLAUDE_MODEL=haiku (cheap, fast) or CLAUDE_MODEL=sonnet (expensive, better)
+const MODEL_MAP = {
+  'haiku': 'claude-3-5-haiku-20241022',
+  'sonnet': 'claude-3-5-sonnet-20241022'
+};
+
 const selectedModel = process.env.CLAUDE_MODEL || 'haiku';
 const modelName = MODEL_MAP[selectedModel] || selectedModel;
 
