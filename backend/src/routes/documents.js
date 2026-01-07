@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import { supabase, supabaseAdmin } from '../config/supabase.js';
 import claudeService from '../services/claude.js';
+import geminiService from '../services/gemini.js';
 import mcpClient from '../services/mcp-client.js';
 import { authMiddleware, checkProjectAccess } from '../middleware/auth.js';
 import path from 'path';
