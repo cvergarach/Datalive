@@ -78,6 +78,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
     // 4. Start async analysis with MCP (pass text content instead of URI)
     console.log('🤖 Starting API analysis...');
+    console.log(`📊 MCP Analysis Payload size: ${extraction.text.length} characters`);
     mcpClient.analyzeAPIDocument(extraction.text, projectId, file.mimetype)
       .then(async (analysis) => {
         console.log('✅ Analysis complete');
@@ -290,6 +291,7 @@ router.post('/from-url', async (req, res) => {
 
     // 6. Start async API analysis - pass the actual scraped content, not the Gemini URI
     console.log('🤖 Starting API analysis...');
+    console.log(`📊 MCP Analysis Payload size: ${content.length} characters`);
     mcpClient.analyzeAPIDocument(content, projectId, mimeType)
       .then(async (analysis) => {
         console.log('✅ Analysis complete');
