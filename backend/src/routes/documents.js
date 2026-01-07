@@ -288,9 +288,9 @@ router.post('/from-url', async (req, res) => {
       .update({ status: 'analyzed' })
       .eq('id', document.id);
 
-    // 6. Start async API analysis
+    // 6. Start async API analysis - pass the actual scraped content, not the Gemini URI
     console.log('🤖 Starting API analysis...');
-    mcpClient.analyzeAPIDocument(geminiFile.uri, projectId, mimeType)
+    mcpClient.analyzeAPIDocument(content, projectId, mimeType)
       .then(async (analysis) => {
         console.log('✅ Analysis complete');
         console.log('📦 Full analysis response:', JSON.stringify(analysis, null, 2));
