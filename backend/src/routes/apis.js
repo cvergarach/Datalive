@@ -144,6 +144,7 @@ router.post('/:apiId/execute', async (req, res) => {
     }
 
     const startTime = Date.now();
+    const results = [];
 
     try {
       // Build URL
@@ -236,16 +237,15 @@ router.post('/:apiId/execute', async (req, res) => {
         duration_ms: duration
       });
     }
-  }
 
     res.json({
-    message: 'Execution completed',
-    results
-  });
-} catch (error) {
-  console.error('❌ Execution error:', error);
-  res.status(500).json({ error: error.message });
-}
+      message: 'Execution completed',
+      results
+    });
+  } catch (error) {
+    console.error('❌ Execution error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 /**
