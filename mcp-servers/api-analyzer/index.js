@@ -16,15 +16,16 @@ const claude = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 
 // Model selection via environment variable
 // CLAUDE_MODEL=haiku (cheap, fast) or CLAUDE_MODEL=sonnet (expensive, better)
-const MODEL_MAP = {
-  'haiku': 'claude-3-5-haiku-20241022',    // $1 per 1M input tokens, $5 per 1M output
-  'sonnet': 'claude-3-5-sonnet-20241022'   // $3 per 1M input tokens, $15 per 1M output
-};
+const selectedModel = process.env.CLAUDE_MODEL || 'haiku';
+const modelName = MODEL_MAP[selectedModel] || selectedModel;
 
-const selectedModel = process.env.CLAUDE_MODEL || 'haiku'; // Default to cheaper model
-const modelName = MODEL_MAP[selectedModel];
+console.log(`🤖 MCP API Analyzer Starting...`);
+console.log(`🤖 Using Claude model: ${selectedModel === modelName ? 'custom' : selectedModel} (${modelName})`);
 
-console.log(`🤖 Using Claude model: ${selectedModel} (${modelName})`);
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', model: modelName, timestamp: new Date().toISOString() });
+});
 
 // MCP Tool: Analyze API Documentation
 app.post('/mcp/call', async (req, res) => {
