@@ -269,8 +269,10 @@ router.post('/:apiId/execute', async (req, res) => {
           data: parsedData,
           record_count: Array.isArray(parsedData) ? parsedData.length : 1,
           execution_duration: duration,
+          executed_at: new Date().toISOString(),
           status: response.ok ? 'success' : 'error'
         });
+
 
     } catch (error) {
       const duration = Date.now() - startTime;

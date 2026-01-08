@@ -81,7 +81,14 @@ router.post('/:chatId/messages', async (req, res) => {
         const { content } = req.body;
         const userId = req.user.id;
 
+        console.log(`💬 Chat request: Project=${projectId}, Chat=${chatId}, User=${userId}`);
+
+        if (!projectId) {
+            throw new Error('Project ID is required for chat context');
+        }
+
         // 1. Save user message
+
         const { error: userMsgError } = await supabaseAdmin
             .from('chat_messages')
             .insert({
@@ -103,33 +110,52 @@ router.post('/:chatId/messages', async (req, res) => {
 
         const { data: apiData } = await supabaseAdmin
             .from('api_data')
-            .select('data, executed_at, api_id, endpoint_id')
+            .select('data, executed_at, api_endpoints(path, description), discovered_apis(name)')
             .eq('project_id', projectId)
             .order('executed_at', { ascending: false })
-            .limit(5); // Last  technical captures
+
+            .limit(10); // Last 10 technical captures
 
 
         console.log(`🔍 Chat context for project ${projectId}: found ${apiData?.length || 0} records`);
+        if (apiData && apiData.length > 0) {
+            console.log(`💡 First record keys: ${Object.keys(apiData[0])}`);
+        }
 
         // 3. Generate AI response
         let aiResponse = "";
-        const context = JSON.stringify(apiData, null, 2);
-        console.log(`📊 Context string length: ${context.length} characters`);
+        let context = JSON.stringify(apiData, null, 2);
+
+        console.log(`📊 Raw context length: ${context.length} characters`);
+
+        // Truncate if too long (very large JSON can confuse or crash LLM requests)
+        if (context.length > 50000) {
+            console.warn('⚠️ Context too long, truncating to 50k characters');
+            context = context.substring(0, 50000) + '... [TRUNCATED]';
+        }
+
+        console.log(`🔍 Context Preview: ${context.substring(0, 200)}...`);
+
+
 
 
         const systemPrompt = `Eres un asistente experto en análisis de datos comerciales para la plataforma DataLive.
-TU OBJETIVO: Responder las dudas del usuario basándote en los DATOS TÉCNICOS capturados de las APIs.
-IDIOMA: Responde SIEMPRE en ESPAÑOL.
-TONO: Profesional, comercial y directo. Evita tecnicismos innecesarios.
+TU OBJETIVO: Responder las dudas del usuario basándote en los DATOS TÉCNICOS capturados de las APIs del cliente.
 
-DATOS DISPONIBLES (Contexto):
+CONTEXTO DE DATOS (JSON):
+A continuación se muestran los últimos datos capturados de las APIs. Cada registro contiene el nombre de la API, la ruta del endpoint y la 'data' resultante.
+----------------------
 ${context}
+----------------------
 
-INSTRUCCIONES:
-1. Si el usuario pregunta por datos específicos, búscalos en el contexto arriba.
-2. Si no hay datos suficientes, indícalo amablemente y sugiere ejecutar una API.
-3. No inventes datos.
-4. Responde de forma que un ejecutivo de negocios lo entienda.`;
+INSTRUCCIONES CRÍTICAS:
+1. **Analiza el campo 'data'**: Ahí reside la información real (ej: listas de empresas, montos, estados).
+2. **Traducción Comercial**: Si encuentras datos técnicos, tradúcelos a lenguaje de negocio. Ej: "Hay 899 registros de compradores en Mercado Público".
+3. **Persistencia**: Si el usuario pregunta "qué hay", resume brevemente qué APIs han devuelto datos y qué información general contienen.
+4. **Honestidad**: Si el contexto está vacío ([]) o no contiene lo solicitado, indica que no hay capturas recientes para esa consulta y sugiere ejecutar la API correspondiente desde la sección de 'APIs'.
+5. **Idioma**: Responde SIEMPRE en ESPAÑOL.
+6. **No inventes**: Solo usa la información presente en el contexto superior.`;
+
 
         if (settings.ai_model?.includes('gemini')) {
             console.log(`💬 Chat using Gemini: ${settings.ai_model || 'gemini-2.5-flash'}`);
