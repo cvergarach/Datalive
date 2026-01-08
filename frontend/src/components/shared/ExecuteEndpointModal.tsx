@@ -72,9 +72,11 @@ export function ExecuteEndpointModal({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
             <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95">
                 <CardHeader>
-                    <div className="flex items-center gap-2 text-blue-600 mb-2">
-                        <Zap className="h-5 w-5 fill-current" />
-                        <CardTitle className="text-xl">Ejecutar Servicio</CardTitle>
+                    <div className="flex items-center gap-3 text-blue-600 mb-2">
+                        <div className="p-2 bg-blue-50 rounded-lg">
+                            <Zap className="h-5 w-5 fill-current" />
+                        </div>
+                        <CardTitle className="text-xl font-bold">Solicitud de Operación</CardTitle>
                     </div>
                     <CardDescription>
                         <div className="space-y-2">
@@ -172,12 +174,12 @@ export function ExecuteEndpointModal({
                         </div>
                     )}
                 </CardContent>
-                <CardFooter className="flex justify-end gap-3 bg-gray-50/80 p-6 rounded-b-xl border-t border-gray-100">
-                    <Button variant="ghost" onClick={onClose} disabled={loading} className="text-gray-500 hover:text-gray-700">
+                <CardFooter className="flex justify-end gap-3 bg-gray-50/80 p-6 rounded-b-2xl border-t border-gray-100">
+                    <Button variant="ghost" onClick={onClose} disabled={loading} className="text-gray-500 hover:text-gray-900 font-medium">
                         Cancelar
                     </Button>
                     <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-6 rounded-xl shadow-lg shadow-blue-500/20 transition-all transform hover:-translate-y-0.5"
+                        className="bg-slate-900 hover:bg-blue-600 text-white font-bold px-8 py-6 rounded-xl shadow-lg hover:shadow-blue-500/20 transition-all transform hover:-translate-y-0.5"
                         onClick={handleExecute}
                         disabled={loading || requiredParams.some(p => !params[p.name])}
                     >
