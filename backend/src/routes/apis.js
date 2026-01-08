@@ -71,7 +71,7 @@ router.post('/:apiId/configure', async (req, res) => {
 
     console.log(`🔑 Configuring API ${apiId}`);
 
-    // Save configuration directly (no testing, keep it simple)
+    // 1. Initial save as 'pending'
     const { data: config, error: configError } = await supabaseAdmin
       .from('api_configurations')
       .upsert({
@@ -88,8 +88,44 @@ router.post('/:apiId/configure', async (req, res) => {
 
     if (configError) throw configError;
 
+    // 2. Perform connection test asynchronously via MCP
+    try {
+      // Get API base URL for testing
+      const { data: apiData } = await supabaseAdmin
+        .from('discovered_apis')
+        .select('base_url')
+        .eq('id', apiId)
+        .single();
+
+      if (apiData?.base_url) {
+        console.log(`📡 Testing connection to ${apiData.base_url}...`);
+        const testResult = await mcpClient.testAPIConnection(apiData.base_url, {
+          auth_type: (await supabaseAdmin.from('discovered_apis').select('auth_type').eq('id', apiId).single()).data?.auth_type,
+          credentials
+        });
+
+        // 3. Update status based on test result
+        await supabaseAdmin
+          .from('api_configurations')
+          .update({
+            test_status: testResult.success ? 'success' : 'failed',
+            last_tested: new Date().toISOString()
+          })
+          .eq('api_id', apiId);
+
+        config.test_status = testResult.success ? 'success' : 'failed';
+      }
+    } catch (testError) {
+      console.error('⚠️ Connection test failed:', testError.message);
+      await supabaseAdmin
+        .from('api_configurations')
+        .update({ test_status: 'failed' })
+        .eq('api_id', apiId);
+      config.test_status = 'failed';
+    }
+
     res.json({
-      message: 'API configured successfully',
+      message: config.test_status === 'success' ? 'API configured and verified' : 'API configured but verification failed',
       config
     });
   } catch (error) {
