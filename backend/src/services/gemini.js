@@ -95,10 +95,30 @@ class GeminiService {
   /**
    * Search/query in a file
    */
-  async queryFile(fileUri, prompt) {
+  async queryFile(fileUri, prompt, projectId = null) {
+    let modelToUse = this.model;
+
     try {
+      if (projectId) {
+        const { supabaseAdmin } = await import('../config/supabase.js');
+        const { data: project } = await supabaseAdmin
+          .from('projects')
+          .select('settings')
+          .eq('id', projectId)
+          .single();
+
+        if (project?.settings?.ai_model && !['haiku', 'sonnet'].includes(project.settings.ai_model)) {
+          modelToUse = project.settings.ai_model;
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not fetch project settings for Gemini, using default model:', error.message);
+    }
+
+    try {
+      console.log(`🤖 Querying Gemini file with model: ${modelToUse}...`);
       const result = await client.models.generateContent({
-        model: this.model,
+        model: modelToUse,
         contents: [
           {
             role: 'user',

@@ -50,10 +50,30 @@ class MCPClient {
 
   // API Analyzer Methods
   async analyzeAPIDocument(textContent, projectId, mimeType) {
+    let settings = null;
+    try {
+      // Fetch project settings if projectId is provided
+      if (projectId) {
+        const { supabaseAdmin } = await import('../config/supabase.js');
+        const { data: project } = await supabaseAdmin
+          .from('projects')
+          .select('settings')
+          .eq('id', projectId)
+          .single();
+
+        if (project?.settings) {
+          settings = project.settings;
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not fetch project settings for MCP, using defaults:', error.message);
+    }
+
     return this.call('apiAnalyzer', 'analyze_api_document', {
       text_content: textContent,
       project_id: projectId,
-      mime_type: mimeType
+      mime_type: mimeType,
+      settings: settings // Provide settings to the MCP server
     });
   }
 
@@ -91,24 +111,47 @@ class MCPClient {
 
   // Insight Generator Methods
   async generateInsights(projectId, dataIds) {
+    const settings = await this._getProjectSettings(projectId);
     return this.call('insightGenerator', 'generate_insights', {
       project_id: projectId,
-      data_ids: dataIds
+      data_ids: dataIds,
+      settings
     });
   }
 
   async suggestDashboards(projectId, dataSchema) {
+    const settings = await this._getProjectSettings(projectId);
     return this.call('insightGenerator', 'suggest_dashboards', {
       project_id: projectId,
-      data_schema: dataSchema
+      data_schema: dataSchema,
+      settings
     });
   }
 
   async generateReport(projectId, config) {
+    const settings = await this._getProjectSettings(projectId);
     return this.call('insightGenerator', 'generate_report', {
       project_id: projectId,
-      config
+      config,
+      settings
     });
+  }
+
+  // Helper to fetch settings
+  async _getProjectSettings(projectId) {
+    if (!projectId) return null;
+    try {
+      const { supabaseAdmin } = await import('../config/supabase.js');
+      const { data: project } = await supabaseAdmin
+        .from('projects')
+        .select('settings')
+        .eq('id', projectId)
+        .single();
+      return project?.settings || null;
+    } catch (error) {
+      console.warn(`⚠️ Error fetching settings for project ${projectId}:`, error.message);
+      return null;
+    }
   }
 
   // Integration Methods

@@ -159,7 +159,7 @@ export default function ChatsPage() {
                             <Button
                                 onClick={handleCreateChat}
                                 className="w-full justify-start gap-2 bg-blue-600 hover:bg-blue-500 text-white"
-                                variant="default"
+                                variant="primary"
                             >
                                 <Plus className="h-4 w-4" /> Nuevo Chat
                             </Button>
@@ -180,8 +180,8 @@ export default function ChatsPage() {
                                         key={chat.id}
                                         onClick={() => setActiveChatId(chat.id)}
                                         className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all flex items-center gap-3 ${activeChatId === chat.id
-                                                ? 'bg-blue-600/20 text-blue-400 border border-blue-600/30'
-                                                : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                                            ? 'bg-blue-600/20 text-blue-400 border border-blue-600/30'
+                                            : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
                                             }`}
                                     >
                                         <MessageSquare className="h-4 w-4 flex-shrink-0" />
@@ -223,8 +223,8 @@ export default function ChatsPage() {
                                                 </div>
                                                 <div className={`max-w-[70%] space-y-2`}>
                                                     <div className={`p-4 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                                                            ? 'bg-blue-600 text-white rounded-tr-none'
-                                                            : 'bg-gray-900 text-gray-200 border border-gray-800 rounded-tl-none'
+                                                        ? 'bg-blue-600 text-white rounded-tr-none'
+                                                        : 'bg-gray-900 text-gray-200 border border-gray-800 rounded-tl-none'
                                                         }`}>
                                                         {msg.content}
                                                     </div>

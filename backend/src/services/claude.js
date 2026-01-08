@@ -56,12 +56,31 @@ class ClaudeService {
     /**
      * Analyze text with Claude
      */
-    async analyzeText(text, prompt) {
+    async analyzeText(text, prompt, projectId = null) {
+        let modelToUse = this.model;
+
         try {
-            console.log(`🤖 Analyzing text with Claude (${this.model})...`);
+            if (projectId) {
+                const { supabaseAdmin } = await import('../config/supabase.js');
+                const { data: project } = await supabaseAdmin
+                    .from('projects')
+                    .select('settings')
+                    .eq('id', projectId)
+                    .single();
+
+                if (project?.settings?.ai_model && MODEL_MAP[project.settings.ai_model]) {
+                    modelToUse = MODEL_MAP[project.settings.ai_model];
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ Could not fetch project settings for Claude, using default model:', error.message);
+        }
+
+        try {
+            console.log(`🤖 Analyzing text with Claude (${modelToUse})...`);
 
             const message = await claude.messages.create({
-                model: this.model,
+                model: modelToUse,
                 max_tokens: 8192,
                 temperature: 0.4,
                 messages: [{

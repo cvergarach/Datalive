@@ -1,4 +1,4 @@
-import express from 'express';
+import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 
@@ -11,16 +11,21 @@ const PORT = process.env.PORT || 3001;
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Gemini client
+// Models
 const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const modelName = 'gemini-2.5-flash';
+const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
+
+const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
+const CLAUDE_MODEL_MAP = {
+  'haiku': 'claude-3-5-haiku-20241022',
+  'sonnet': 'claude-3-5-sonnet-20241022'
+};
 
 console.log(`🤖 MCP API Analyzer Starting...`);
-console.log(`🤖 Using Gemini model: ${modelName}`);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', model: modelName, timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // MCP Tool: Analyze API Documentation
@@ -29,7 +34,12 @@ app.post('/mcp/call', async (req, res) => {
     const { tool, params } = req.body;
 
     if (tool === 'analyze_api_document') {
-      const result = await analyzeAPIDocument(params.text_content, params.project_id, params.mime_type);
+      const result = await analyzeAPIDocument(
+        params.text_content,
+        params.project_id,
+        params.mime_type,
+        params.settings
+      );
       return res.json(result);
     }
 
@@ -50,7 +60,11 @@ app.post('/mcp/call', async (req, res) => {
   }
 });
 
-async function analyzeAPIDocument(textContent, projectId, mimeType = 'application/pdf') {
+async function analyzeAPIDocument(textContent, projectId, mimeType = 'application/pdf', settings = null) {
+  const modelToUse = settings?.ai_model || DEFAULT_GEMINI_MODEL;
+  const isClaude = modelToUse === 'haiku' || modelToUse === 'sonnet';
+  const effectiveModel = isClaude ? CLAUDE_MODEL_MAP[modelToUse] : modelToUse;
+
   const prompt = `🚨 TAREA CRÍTICA: Extraer Configuración de API para EJECUCIÓN AUTOMÁTICA 🚨
 
 TU OBJETIVO: Extraer TODA la información necesaria para ejecutar los endpoints de la API SIN intervención del usuario, presentando la información en un lenguaje COMERCIAL y de NEGOCIO.
@@ -139,30 +153,40 @@ RETORNA SOLO JSON VÁLIDO. SIN ETIQUETAS DE MARKDOWN.
 
 COMIENZA EL ANÁLISIS COMERCIAL:`;
 
-  console.log('📥 Analyzing text content with Gemini...');
-  console.log('🔍 DEBUG - Text content length:', textContent.length);
-  console.log('🔍 DEBUG - First 500 chars:', textContent.substring(0, 500));
+  console.log(`📥 Analyzing text content with ${isClaude ? 'Claude' : 'Gemini'} (${effectiveModel})...`);
 
   const startTime = Date.now();
+  let responseText;
 
   try {
-    const result = await genAI.models.generateContent({
-      model: modelName,
-      contents: [{
-        role: 'user',
-        parts: [{ text: `${prompt}\n\nDocument content:\n${textContent}` }]
-      }],
-      generationConfig: {
-        maxOutputTokens: 8192,
+    if (isClaude) {
+      const message = await anthropic.messages.create({
+        model: effectiveModel,
+        max_tokens: 8192,
         temperature: 0.4,
-      }
-    });
+        messages: [{
+          role: 'user',
+          content: `${prompt}\n\nDocument content:\n${textContent}`
+        }]
+      });
+      responseText = message.content[0].text;
+    } else {
+      const result = await genAI.models.generateContent({
+        model: effectiveModel,
+        contents: [{
+          role: 'user',
+          parts: [{ text: `${prompt}\n\nDocument content:\n${textContent}` }]
+        }],
+        generationConfig: {
+          maxOutputTokens: 8192,
+          temperature: 0.4,
+        }
+      });
+      responseText = result.text;
+    }
 
     const duration = (Date.now() - startTime) / 1000;
-    console.log(`🤖 Gemini Response received in ${duration.toFixed(2)}s!`);
-
-    // Extract text from Gemini response
-    const responseText = result.text;
+    console.log(`🤖 ${isClaude ? 'Claude' : 'Gemini'} Response received in ${duration.toFixed(2)}s!`);
 
     console.log('🔍 DEBUG - Response length:', responseText?.length || 0);
     console.log('🧹 Cleaning response...');
