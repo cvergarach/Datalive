@@ -53,26 +53,38 @@ FORMATO JSON:
     const isClaude = modelToUse === 'haiku' || modelToUse === 'sonnet';
     const effectiveModel = isClaude ? CLAUDE_MODEL_MAP[modelToUse] : modelToUse;
 
-    const prompt = `📊 TAREA: Diseñar Dashboard Ejecutivo 📊
+    const prompt = `📊 TAREA: Diseñar Dashboard Ejecutivo con DATOS REALES 📊
         
-Crea una propuesta de dashboard basada en los datos adjuntos.
+Crea una propuesta de dashboard basada en los datos adjuntos. NO USES PLACEHOLDERS. Extrae los valores reales de los datos proporcionados para cada widget.
 
 FORMATO JSON:
 {
   "dashboards": [
     {
-      "title": "Panel de Control Operativo",
+      "title": "Nombre del Tablero",
       "widgets": [
         {
-          "type": "kpi|chart|table",
-          "title": "Ventas Totales",
-          "query_context": "Suma de total_amount",
+          "type": "bar|line|pie|stat",
+          "title": "Título de la Métrica",
+          "description": "Explicación de qué estamos viendo",
+          "data": [
+            { "label": "Enero", "value": 150 },
+            { "label": "Febrero", "value": 200 }
+          ],
+          "current_value": "200", 
+          "trend": "+15%",
           "visual_config": { "color": "blue" }
         }
       ]
     }
   ]
-}`;
+}
+
+REGLAS:
+1. Extrae los datos del 'Dato de entrada' adjunto.
+2. Si es un 'stat', proporciona un 'current_value'.
+3. Si es un gráfico, proporciona un array 'data' con al menos 3 puntos.
+4. Si no hay suficientes datos, crea una proyección realista basada en la tendencia detectada.`;
 
     console.log(`📊 [DASHBOARDS] Suggesting dashboards for project ${projectId} using ${effectiveModel}`);
     return this._callAI(prompt, JSON.stringify(dataContent), isClaude, effectiveModel);

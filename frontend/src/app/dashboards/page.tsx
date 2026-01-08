@@ -175,22 +175,60 @@ export default function DashboardsPage() {
                                                 </div>
                                             </CardHeader>
                                             <CardContent className="space-y-6">
-                                                <div className="h-40 bg-gray-800/30 rounded-xl border border-gray-800 flex flex-col items-center justify-center gap-2 group-hover:bg-gray-800/50 transition-all border-dashed relative overflow-hidden">
-                                                    {/* Placeholder for real charts - in a real app we'd use Recharts or similar */}
-                                                    <div className="absolute inset-0 opacity-10 flex items-end justify-center gap-1 p-4">
-                                                        {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
-                                                            <div key={i} className="bg-blue-500 w-full" style={{ height: `${h}%` }} />
-                                                        ))}
-                                                    </div>
-                                                    <div className="z-10 bg-gray-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-gray-700 shadow-xl">
-                                                        <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
-                                                            <Activity className="h-3 w-3" /> Visualización Lista
-                                                        </span>
+                                                <div className="h-44 bg-gray-800/20 rounded-xl border border-gray-800/50 flex flex-col items-center justify-center gap-2 group-hover:bg-gray-800/30 transition-all relative overflow-hidden p-4">
+                                                    {widget.data && widget.data.length > 0 ? (
+                                                        <div className="w-full h-full flex items-end justify-around gap-2 pb-6">
+                                                            {widget.data.map((item: any, i: number) => {
+                                                                const maxValue = Math.max(...widget.data.map((d: any) => d.value || 0));
+                                                                const height = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
+                                                                return (
+                                                                    <div key={i} className="flex-1 flex flex-col items-center gap-2 group/bar h-full justify-end">
+                                                                        <div
+                                                                            className="w-full bg-blue-500/40 group-hover/bar:bg-blue-400 transition-all rounded-t-sm relative"
+                                                                            style={{ height: `${height}%` }}
+                                                                        >
+                                                                            <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-bold text-gray-400 opacity-0 group-hover/bar:opacity-100 transition-opacity">
+                                                                                {item.value}
+                                                                            </span>
+                                                                        </div>
+                                                                        <span className="text-[8px] text-gray-500 font-medium truncate w-full text-center">
+                                                                            {item.label}
+                                                                        </span>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <div className="absolute inset-0 opacity-10 flex items-end justify-center gap-1 p-4">
+                                                                {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
+                                                                    <div key={i} className="bg-blue-500 w-full" style={{ height: `${h}%` }} />
+                                                                ))}
+                                                            </div>
+                                                            <div className="z-10 bg-gray-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-gray-700 shadow-xl">
+                                                                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
+                                                                    <Activity className="h-3 w-3" /> Visualización Lista
+                                                                </span>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex items-end justify-between">
+                                                    <div className="space-y-1">
+                                                        <p className="text-xs text-gray-500 font-medium">{widget.description}</p>
+                                                        {widget.current_value && (
+                                                            <div className="flex items-baseline gap-2">
+                                                                <span className="text-2xl font-black text-white">{widget.current_value}</span>
+                                                                {widget.trend && (
+                                                                    <span className={`text-[10px] font-bold ${widget.trend.startsWith('+') ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                                        {widget.trend}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
-                                                <p className="text-xs text-gray-500 line-clamp-2 italic">
-                                                    "{widget.description}"
-                                                </p>
                                                 <div className="flex flex-wrap gap-2">
                                                     {widget.suggested_fields?.map((field: string, fidx: number) => (
                                                         <span key={fidx} className="px-2 py-0.5 bg-gray-800 text-gray-400 rounded-md text-[9px] font-mono border border-gray-700">
