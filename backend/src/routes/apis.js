@@ -105,9 +105,14 @@ router.post('/:apiId/configure', async (req, res) => {
 router.post('/:apiId/execute', async (req, res) => {
   try {
     const { projectId, apiId } = req.params;
-    const { endpoint_id, parameters } = req.body; // Single endpoint, not array
+    const { endpoint_id, endpoint_ids, parameters } = req.body;
+    const targetEndpointId = endpoint_id || (endpoint_ids && endpoint_ids[0]);
 
-    console.log(`🚀 Executing endpoint ${endpoint_id} for API ${apiId}`);
+    if (!targetEndpointId) {
+      return res.status(400).json({ error: 'No endpoint specified for execution.' });
+    }
+
+    console.log(`🚀 Executing endpoint ${targetEndpointId} for API ${apiId}`);
 
     // Get API details
     const { data: api, error: apiError } = await supabaseAdmin
@@ -120,23 +125,21 @@ router.post('/:apiId/execute', async (req, res) => {
       return res.status(404).json({ error: 'API not found' });
     }
 
-    // Get API config (credentials)
-    const { data: config, error: configError } = await supabaseAdmin
+    // Get API config (credentials) - Optional
+    const { data: config } = await supabaseAdmin
       .from('api_configurations')
       .select('credentials')
       .eq('api_id', apiId)
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
 
-    if (configError || !config) {
-      return res.status(400).json({ error: 'API not configured. Please configure credentials first.' });
-    }
+    const credentials = config?.credentials || {};
 
     // Get the specific endpoint
     const { data: endpoint, error: endpointError } = await supabaseAdmin
       .from('api_endpoints')
       .select('*')
-      .eq('id', endpoint_id)
+      .eq('id', targetEndpointId)
       .single();
 
     if (endpointError || !endpoint) {
@@ -156,21 +159,21 @@ router.post('/:apiId/execute', async (req, res) => {
       };
 
       // Add auth
-      if (api.auth_type === 'basic' && config.credentials.username && config.credentials.password) {
-        const auth = Buffer.from(`${config.credentials.username}:${config.credentials.password}`).toString('base64');
+      if (api.auth_type === 'basic' && credentials.username && credentials.password) {
+        const auth = Buffer.from(`${credentials.username}:${credentials.password}`).toString('base64');
         headers['Authorization'] = `Basic ${auth}`;
-      } else if (api.auth_type === 'bearer' && config.credentials.api_key) {
-        headers['Authorization'] = `Bearer ${config.credentials.api_key}`;
-      } else if (api.auth_type === 'api_key' && config.credentials.api_key) {
-        headers['X-API-Key'] = config.credentials.api_key;
+      } else if (api.auth_type === 'bearer' && credentials.api_key) {
+        headers['Authorization'] = `Bearer ${credentials.api_key}`;
+      } else if (api.auth_type === 'api_key' && credentials.api_key) {
+        headers['X-API-Key'] = credentials.api_key;
       }
 
       // Add parameters
       const requestParams = { ...parameters };
 
-      // For ticket auth, add ticket to params
-      if (api.auth_type === 'ticket' && config.credentials.ticket) {
-        requestParams.ticket = config.credentials.ticket;
+      // For ticket auth, add ticket to params if it exists in credentials
+      if (api.auth_type === 'ticket' && credentials.ticket) {
+        requestParams.ticket = credentials.ticket;
       }
 
       // Make request
