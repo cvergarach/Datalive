@@ -8,8 +8,8 @@ const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 
 const CLAUDE_MODEL_MAP = {
-    'haiku': 'claude-3-5-haiku-20241022',
-    'sonnet': 'claude-3-5-sonnet-20241022'
+  'haiku': 'claude-3-5-haiku-20241022',
+  'sonnet': 'claude-3-5-sonnet-20241022'
 };
 
 /**
@@ -17,12 +17,12 @@ const CLAUDE_MODEL_MAP = {
  * Consolidates logic previously in mcp-insight-generator.
  */
 class InsightGeneratorService {
-    async generateInsights(projectId, dataContent, settings = null) {
-        const modelToUse = settings?.ai_model || 'gemini-2.5-flash';
-        const isClaude = modelToUse === 'haiku' || modelToUse === 'sonnet';
-        const effectiveModel = isClaude ? CLAUDE_MODEL_MAP[modelToUse] : modelToUse;
+  async generateInsights(projectId, dataContent, settings = null) {
+    const modelToUse = settings?.ai_model || 'gemini-2.5-flash';
+    const isClaude = modelToUse === 'haiku' || modelToUse === 'sonnet';
+    const effectiveModel = isClaude ? CLAUDE_MODEL_MAP[modelToUse] : modelToUse;
 
-        const prompt = `📊 TAREA: Generar Insights Estratégicos de Negocio 📊
+    const prompt = `📊 TAREA: Generar Insights Estratégicos de Negocio 📊
         
 Tienes los siguientes datos provenientes de ejecuciones de API. Tu objetivo es transformarlos en 3-5 INSIGHTS CLAVE para un ejecutivo de nivel C.
 
@@ -44,16 +44,16 @@ FORMATO JSON:
   ]
 }`;
 
-        console.log(`🧠 [INSIGHTS] Generating insights for project ${projectId} using ${effectiveModel}`);
-        return this._callAI(prompt, JSON.stringify(dataContent), isClaude, effectiveModel);
-    }
+    console.log(`🧠 [INSIGHTS] Generating insights for project ${projectId} using ${effectiveModel}`);
+    return this._callAI(prompt, JSON.stringify(dataContent), isClaude, effectiveModel);
+  }
 
-    async suggestDashboards(projectId, dataContent, settings = null) {
-        const modelToUse = settings?.ai_model || 'gemini-2.5-flash';
-        const isClaude = modelToUse === 'haiku' || modelToUse === 'sonnet';
-        const effectiveModel = isClaude ? CLAUDE_MODEL_MAP[modelToUse] : modelToUse;
+  async suggestDashboards(projectId, dataContent, settings = null) {
+    const modelToUse = settings?.ai_model || 'gemini-2.5-flash';
+    const isClaude = modelToUse === 'haiku' || modelToUse === 'sonnet';
+    const effectiveModel = isClaude ? CLAUDE_MODEL_MAP[modelToUse] : modelToUse;
 
-        const prompt = `📊 TAREA: Diseñar Dashboard Ejecutivo 📊
+    const prompt = `📊 TAREA: Diseñar Dashboard Ejecutivo 📊
         
 Crea una propuesta de dashboard basada en los datos adjuntos.
 
@@ -74,36 +74,37 @@ FORMATO JSON:
   ]
 }`;
 
-        console.log(`📊 [DASHBOARDS] Suggesting dashboards for project ${projectId} using ${effectiveModel}`);
-        return this._callAI(prompt, JSON.stringify(dataContent), isClaude, effectiveModel);
-    }
+    console.log(`📊 [DASHBOARDS] Suggesting dashboards for project ${projectId} using ${effectiveModel}`);
+    return this._callAI(prompt, JSON.stringify(dataContent), isClaude, effectiveModel);
+  }
 
-    async _callAI(prompt, context, isClaude, model) {
-        try {
-            let responseText;
-            if (isClaude) {
-                const message = await anthropic.messages.create({
-                    model: model,
-                    max_tokens: 4096,
-                    temperature: 0.3,
-                    messages: [{ role: 'user', content: `${prompt}\n\nDato de entrada:\n${context}` }]
-                });
-                responseText = message.content[0].text;
-            } else {
-                const result = await genAI.getGenerativeModel({ model: model }).generateContent({
-                    contents: [{ role: 'user', parts: [{ text: `${prompt}\n\nDato de entrada:\n${context}` }] }],
-                    generationConfig: { maxOutputTokens: 4096, temperature: 0.3 }
-                });
-                responseText = result.response.text();
-            }
+  async _callAI(prompt, context, isClaude, model) {
+    try {
+      let responseText;
+      if (isClaude) {
+        const message = await anthropic.messages.create({
+          model: model,
+          max_tokens: 4096,
+          temperature: 0.3,
+          messages: [{ role: 'user', content: `${prompt}\n\nDato de entrada:\n${context}` }]
+        });
+        responseText = message.content[0].text;
+      } else {
+        const result = await genAI.models.generateContent({
+          model: model,
+          contents: [{ role: 'user', parts: [{ text: `${prompt}\n\nDato de entrada:\n${context}` }] }],
+          generationConfig: { maxOutputTokens: 4096, temperature: 0.3 }
+        });
+        responseText = result.text;
+      }
 
-            const jsonMatch = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '').match(/\{[\s\S]*\}/);
-            return JSON.parse(jsonMatch[0]);
-        } catch (error) {
-            console.error(`❌ [INSIGHTS/SERVER] Error:`, error.message);
-            throw error;
-        }
+      const jsonMatch = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '').match(/\{[\s\S]*\}/);
+      return JSON.parse(jsonMatch[0]);
+    } catch (error) {
+      console.error(`❌ [INSIGHTS/SERVER] Error:`, error.message);
+      throw error;
     }
+  }
 }
 
 export default new InsightGeneratorService();

@@ -8,8 +8,8 @@ const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 
 const CLAUDE_MODEL_MAP = {
-    'haiku': 'claude-3-5-haiku-20241022',
-    'sonnet': 'claude-3-5-sonnet-20241022'
+  'haiku': 'claude-3-5-haiku-20241022',
+  'sonnet': 'claude-3-5-sonnet-20241022'
 };
 
 /**
@@ -17,12 +17,12 @@ const CLAUDE_MODEL_MAP = {
  * Consolidates logic previously in mcp-api-analyzer.
  */
 class AnalyzerService {
-    async analyzeAPIDocument(textContent, projectId, mimeType = 'application/pdf', settings = null) {
-        const modelToUse = settings?.ai_model || 'gemini-2.5-flash';
-        const isClaude = modelToUse === 'haiku' || modelToUse === 'sonnet';
-        const effectiveModel = isClaude ? CLAUDE_MODEL_MAP[modelToUse] : modelToUse;
+  async analyzeAPIDocument(textContent, projectId, mimeType = 'application/pdf', settings = null) {
+    const modelToUse = settings?.ai_model || 'gemini-2.5-flash';
+    const isClaude = modelToUse === 'haiku' || modelToUse === 'sonnet';
+    const effectiveModel = isClaude ? CLAUDE_MODEL_MAP[modelToUse] : modelToUse;
 
-        const prompt = `🚨 TAREA CRÍTICA: Extraer Configuración de API para EJECUCIÓN AUTOMÁTICA 🚨
+    const prompt = `🚨 TAREA CRÍTICA: Extraer Configuración de API para EJECUCIÓN AUTOMÁTICA 🚨
 
 TU OBJETIVO: Extraer TODA la información necesaria para ejecutar los endpoints de la API SIN intervención del usuario, presentando la información en un lenguaje COMERCIAL y de NEGOCIO.
 
@@ -85,39 +85,40 @@ FORMATO DE SALIDA (STRICT JSON):
 
 RETORNA SOLO JSON VÁLIDO. SIN ETIQUETAS DE MARKDOWN.`;
 
-        console.log(`🧠 [ANALYZER] Processing document for project ${projectId} using ${effectiveModel}`);
+    console.log(`🧠 [ANALYZER] Processing document for project ${projectId} using ${effectiveModel}`);
 
-        try {
-            let responseText;
-            if (isClaude) {
-                const message = await anthropic.messages.create({
-                    model: effectiveModel,
-                    max_tokens: 8192,
-                    temperature: 0.4,
-                    messages: [{ role: 'user', content: `${prompt}\n\nDocument content:\n${textContent}` }]
-                });
-                responseText = message.content[0].text;
-            } else {
-                const result = await genAI.getGenerativeModel({ model: effectiveModel }).generateContent({
-                    contents: [{ role: 'user', parts: [{ text: `${prompt}\n\nDocument content:\n${textContent}` }] }],
-                    generationConfig: { maxOutputTokens: 8192, temperature: 0.4 }
-                });
-                responseText = result.response.text();
-            }
+    try {
+      let responseText;
+      if (isClaude) {
+        const message = await anthropic.messages.create({
+          model: effectiveModel,
+          max_tokens: 8192,
+          temperature: 0.4,
+          messages: [{ role: 'user', content: `${prompt}\n\nDocument content:\n${textContent}` }]
+        });
+        responseText = message.content[0].text;
+      } else {
+        const result = await genAI.models.generateContent({
+          model: effectiveModel,
+          contents: [{ role: 'user', parts: [{ text: `${prompt}\n\nDocument content:\n${textContent}` }] }],
+          generationConfig: { maxOutputTokens: 8192, temperature: 0.4 }
+        });
+        responseText = result.text;
+      }
 
-            // Cleanup response
-            let cleanedText = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-            const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) throw new Error('No valid JSON found in AI response');
+      // Cleanup response
+      let cleanedText = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('No valid JSON found in AI response');
 
-            const parsed = JSON.parse(jsonMatch[0]);
-            console.log(`✅ [ANALYZER] Analysis complete. Discovered ${parsed.apis?.length || 0} APIs.`);
-            return parsed;
-        } catch (error) {
-            console.error(`❌ [ANALYZER] Error:`, error.message);
-            throw error;
-        }
+      const parsed = JSON.parse(jsonMatch[0]);
+      console.log(`✅ [ANALYZER] Analysis complete. Discovered ${parsed.apis?.length || 0} APIs.`);
+      return parsed;
+    } catch (error) {
+      console.error(`❌ [ANALYZER] Error:`, error.message);
+      throw error;
     }
+  }
 }
 
 export default new AnalyzerService();
