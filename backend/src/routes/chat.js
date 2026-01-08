@@ -1,7 +1,7 @@
 import express from 'express';
 import { supabase, supabaseAdmin } from '../config/supabase.js';
 import { authMiddleware, checkProjectAccess } from '../middleware/auth.js';
-import { GoogleGenerativeAI } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import { Anthropic } from '@anthropic-ai/sdk';
 
 const router = express.Router({ mergeParams: true });
@@ -127,17 +127,18 @@ INSTRUCCIONES:
 4. Responde de forma que un ejecutivo de negocios lo entienda.`;
 
         if (settings.ai_model.includes('gemini')) {
-            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-            const model = genAI.getGenerativeModel({ model: settings.ai_model || "gemini-2.5-flash" });
-            const result = await model.generateContent([systemPrompt, content]);
-            aiResponse = result.response.text();
+            const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const result = await genAI.models.generateContent({
+                model: settings.ai_model || "gemini-2.5-flash",
+                contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nPregunta: ${content}` }] }]
+            });
+            aiResponse = result.text;
         } else {
             const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
             const msg = await anthropic.messages.create({
                 model: settings.ai_model || "claude-3-5-sonnet-20241022",
                 max_tokens: 1024,
-                system: systemPrompt,
-                messages: [{ role: "user", content: content }],
+                messages: [{ role: "user", content: `${systemPrompt}\n\nPregunta: ${content}` }],
             });
             aiResponse = msg.content[0].text;
         }
