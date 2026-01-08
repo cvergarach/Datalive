@@ -65,8 +65,12 @@ export function ExecuteEndpointModal({
 
     if (!isOpen) return null;
 
-    const requiredParams = endpoint.parameters?.filter(p => p.required) || [];
-    const optionalParams = endpoint.parameters?.filter(p => !p.required) || [];
+    // Filter out common credential fields that are already managed by the system
+    const credentialFields = ['ticket', 'apiKey', 'api_key', 'token', 'username', 'password'];
+    const filteredParameters = endpoint.parameters?.filter(p => !credentialFields.includes(p.name)) || [];
+
+    const requiredParams = filteredParameters.filter(p => p.required) || [];
+    const optionalParams = filteredParameters.filter(p => !p.required) || [];
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
