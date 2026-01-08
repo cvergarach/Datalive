@@ -2,6 +2,7 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import analyzer from './analyzer.js';
 import insightGenerator from './insight-generator.js';
+import apiExecutor from './api-executor.js';
 
 dotenv.config();
 
@@ -118,22 +119,15 @@ class MCPClient {
 
   // API Executor Methods
   async testAPIConnection(baseUrl, authConfig) {
-    return this.call('apiExecutor', 'test_api_connection', {
-      base_url: baseUrl,
-      auth_config: authConfig
-    });
+    return apiExecutor.testAPIConnection(baseUrl, authConfig);
   }
 
   async executeAPICall(config) {
-    return this.call('apiExecutor', 'execute_api_call', config);
+    return apiExecutor.executeAPICall(config);
   }
 
   async batchExecute(endpoints, auth, projectId) {
-    return this.call('apiExecutor', 'batch_execute', {
-      endpoints,
-      auth,
-      project_id: projectId
-    });
+    return apiExecutor.batchExecute(endpoints, auth, projectId);
   }
 
   // Insight Generator Methods
