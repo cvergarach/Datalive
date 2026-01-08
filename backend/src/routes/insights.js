@@ -26,9 +26,37 @@ router.post('/generate', async (req, res) => {
   try {
     const { projectId } = req.params;
     const { data_ids } = req.body;
-    const insights = await mcpClient.generateInsights(projectId, data_ids);
-    res.json({ insights });
+
+    console.log(`🧠 Generating insights for project ${projectId}...`);
+    const result = await mcpClient.generateInsights(projectId, data_ids);
+
+    if (result.insights && result.insights.length > 0) {
+      console.log(`💾 Saving ${result.insights.length} insight(s) to database...`);
+
+      const insightsToInsert = result.insights.map(insight => ({
+        project_id: projectId,
+        type: insight.type,
+        title: insight.title,
+        description: insight.description,
+        confidence: insight.confidence,
+        metadata: {
+          actionable_next_step: insight.actionable_next_step,
+          source_data_ids: data_ids
+        }
+      }));
+
+      const { data, error } = await supabaseAdmin
+        .from('insights')
+        .insert(insightsToInsert)
+        .select();
+
+      if (error) throw error;
+      return res.json({ insights: data });
+    }
+
+    res.json({ insights: [] });
   } catch (error) {
+    console.error('❌ Insight generation error:', error);
     res.status(500).json({ error: error.message });
   }
 });

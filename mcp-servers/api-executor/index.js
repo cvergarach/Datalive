@@ -54,7 +54,7 @@ async function executeAPICall(config) {
       params: config.params,
       data: config.data
     });
-    
+
     return {
       success: true,
       data: response.data,
@@ -84,13 +84,21 @@ async function batchExecute(endpoints, auth, projectId) {
 
 function buildAuthHeaders(authConfig) {
   const headers = {};
-  
-  if (authConfig.type === 'bearer' && authConfig.credentials.api_key) {
-    headers['Authorization'] = `Bearer ${authConfig.credentials.api_key}`;
-  } else if (authConfig.type === 'api_key' && authConfig.credentials.api_key) {
-    headers['X-API-Key'] = authConfig.credentials.api_key;
+  const { type, credentials } = authConfig;
+
+  if (!credentials) return headers;
+
+  if (type === 'bearer' && credentials.api_key) {
+    headers['Authorization'] = `Bearer ${credentials.api_key}`;
+  } else if (type === 'api_key' && credentials.api_key) {
+    headers['X-API-Key'] = credentials.api_key;
+  } else if (type === 'basic' && credentials.username && credentials.password) {
+    const auth = Buffer.from(`${credentials.username}:${credentials.password}`).toString('base64');
+    headers['Authorization'] = `Basic ${auth}`;
+  } else if (type === 'token' && credentials.token) {
+    headers['Authorization'] = `Token ${credentials.token}`;
   }
-  
+
   return headers;
 }
 
