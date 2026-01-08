@@ -81,27 +81,43 @@ FORMATO JSON:
   async _callAI(prompt, context, isClaude, model) {
     try {
       let responseText;
-      if (isClaude) {
-        const message = await anthropic.messages.create({
-          model: model,
-          max_tokens: 4096,
-          temperature: 0.3,
-          messages: [{ role: 'user', content: `${prompt}\n\nDato de entrada:\n${context}` }]
-        });
-        responseText = message.content[0].text;
-      } else {
-        const result = await genAI.models.generateContent({
-          model: model,
-          contents: [{ role: 'user', parts: [{ text: `${prompt}\n\nDato de entrada:\n${context}` }] }],
-          generationConfig: { maxOutputTokens: 4096, temperature: 0.3 }
-        });
-        responseText = result.text;
+      const maxRetries = 2;
+
+      for (let i = 0; i <= maxRetries; i++) {
+        try {
+          if (isClaude) {
+            const message = await anthropic.messages.create({
+              model: model,
+              max_tokens: 4096,
+              temperature: 0.3,
+              messages: [{ role: 'user', content: `${prompt}\n\nDato de entrada:\n${context}` }]
+            });
+            responseText = message.content[0].text;
+          } else {
+            const result = await genAI.models.generateContent({
+              model: model,
+              contents: [{ role: 'user', parts: [{ text: `${prompt}\n\nDato de entrada:\n${context}` }] }],
+              generationConfig: { maxOutputTokens: 4096, temperature: 0.3 }
+            });
+            responseText = result.text;
+          }
+          if (!responseText) throw new Error('AI returned empty response');
+          break;
+        } catch (error) {
+          if (i < maxRetries && (error.message.includes('overloaded') || error.status === 503)) {
+            console.warn(`⚠️ [INSIGHTS] Model overloaded. Retrying... (${i + 1}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
+            continue;
+          }
+          throw error;
+        }
       }
 
       const jsonMatch = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '').match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('No valid JSON found in insight response');
       return JSON.parse(jsonMatch[0]);
     } catch (error) {
-      console.error(`❌ [INSIGHTS/SERVER] Error:`, error.message);
+      console.error(`❌ [INSIGHTS/INTERNAL] Error:`, error.message);
       throw error;
     }
   }
