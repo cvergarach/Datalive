@@ -22,62 +22,55 @@ class AnalyzerService {
     const isClaude = modelToUse === 'haiku' || modelToUse === 'sonnet';
     const effectiveModel = isClaude ? CLAUDE_MODEL_MAP[modelToUse] : modelToUse;
 
-    const prompt = `🚨 TAREA CRÍTICA: Extraer Configuración de API para EJECUCIÓN AUTOMÁTICA 🚨
+    const prompt = `🚨 TAREA ESTRATÉGICA: Descubrimiento de Capacidades y Modelos de Negocio 🚨
 
-TU OBJETIVO: Extraer TODA la información necesaria para ejecutar los endpoints de la API SIN intervención del usuario, presentando la información en un lenguaje COMERCIAL y de NEGOCIO.
-
-═══════════════════════════════════════════════════════════════
-
-REGLAS DE IDIOMA Y TONO (ESTRICTO):
-1. **IDIOMA**: Todo el contenido generado (nombres, descripciones, estrategias) DEBE estar en ESPAÑOL.
-2. **TONO COMERCIAL**: No uses lenguaje técnico. En lugar de "GET /api/v1/customers", usa "Consultar Cartera de Clientes". En lugar de "Parámetros de cabecera", usa "Datos de Acceso".
-3. **VALOR DE NEGOCIO**: Las descripciones deben explicar QUÉ hace la funcionalidad para la empresa. Ej: "Permite obtener el listado de facturas pendientes para gestión de cobranza".
+TU OBJETIVO: Actuar como un Consultor Senior de Negocios y Arquitecto de Soluciones. Debes analizar la documentación no solo para extraer endpoints técnicos, sino para descubrir el VALOR ECONÓMICO oculto en la API.
 
 ═══════════════════════════════════════════════════════════════
 
-QUÉ DEBES EXTRAER:
-1. **URL BASE** - El punto de entrada de la API.
-2. **CREDENCIALES DE AUTENTICACIÓN** - Valores reales encontrados en el documento.
-3. **ENDPOINTS (FUNCIONALIDADES)** - Todas las capacidades disponibles.
-4. **PARÁMETROS** - Con valores de ejemplo para ejecución automática.
-5. **ESTRATEGIA DE EJECUCIÓN** - Orden lógico para usar las funciones.
+REGLAS DE IDIOMA Y VISIÓN (ESTRICTO):
+1. **IDIOMA**: Todo DEBE estar en ESPAÑOL.
+2. **VISIÓN COMERCIAL**: No describas funciones técnicas. Describe SOLUCIONES. 
+   - Incorrecto: "Endpoint para listar licitaciones".
+   - Correcto: "Motor de Detección de Oportunidades de Venta con el Estado".
+3. **IDENTIFICACIÓN DE ORO**: Busca datos que permitan:
+   - Ahorrar dinero (Eficiencia).
+   - Ganar más dinero (Ventas/Marketing).
+   - Evitar riesgos (Compliance/Seguridad).
 
 ═══════════════════════════════════════════════════════════════
 
 FORMATO DE SALIDA (STRICT JSON):
 {
   "apis": [{
-    "name": "Nombre Comercial de la API",
-    "description": "Descripción orientada a negocio",
-    "base_url": "https://api.ejemplo.com",
-    "auth_type": "basic|bearer|api_key|ticket|oauth|token|none",
-    "auto_executable": true,
-    "extracted_credentials": { ... },
-    "auth_details": {
-      "header_name": "Authorization",
-      "format": "Basic base64(usuario:contraseña)",
-      "guide": "Guía breve en español"
+    "name": "Nombre Comercial Impactante",
+    "description": "Propuesta de valor clara (ej: 'Plataforma para dominación del mercado público')",
+    "base_url": "...",
+    "auth_type": "...",
+    "business_potential": {
+       "score": 1-10,
+       "rationale": "Por qué esta API es valiosa para un negocio",
+       "key_benefits": ["Beneficio 1", "Beneficio 2"]
     },
-    "execution_strategy": "Plan de ejecución paso a paso",
+    "monetization_ideas": [
+       {
+         "model": "SaaS / Alertas / Consultoría / etc",
+         "description": "Cómo ganar dinero con estos datos",
+         "estimated_value": "Alto/Medio/Bajo"
+       }
+    ],
+    "target_audience": "Quién pagaría por esta información (ej: PYMEs, Gerentes comerciales)",
+    "execution_strategy": "Plan maestro de negocio para usar esta API",
     "endpoints": [
       {
-        "method": "GET|POST|PUT|DELETE",
-        "path": "/v1/recurso",
-        "description": "Nombre funcional en español",
+        "method": "...",
+        "path": "...",
+        "description": "Nombre de la Capacidad de Negocio",
         "category": "auth|data_fetch|data_modify|other",
-        "estimated_value": "high|medium|low",
-        "parameters": [
-          {
-            "name": "name",
-            "type": "string",
-            "required": true,
-            "description": "...",
-            "example": "...",
-            "auto_value": "..."
-          }
-        ],
-        "execution_order": 1,
-        "execution_steps": "Instrucciones de negocio"
+        "business_value": "Describir el impacto financiero o de eficiencia de este endpoint específico",
+        "potential_alerts": ["Alerta que se podría crear con estos datos (ej: 'Avisar si precio baja un 10%')"],
+        "parameters": [ ... ],
+        "execution_steps": "Guía táctica para el usuario"
       }
     ]
   }]

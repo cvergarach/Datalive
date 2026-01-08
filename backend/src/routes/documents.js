@@ -115,7 +115,10 @@ router.post('/upload', upload.single('file'), async (req, res) => {
                 execution_strategy: api.execution_strategy,
                 metadata: {
                   auto_executable: api.auto_executable || false,
-                  extracted_credentials: api.extracted_credentials || null
+                  extracted_credentials: api.extracted_credentials || null,
+                  business_potential: api.business_potential || null,
+                  monetization_ideas: api.monetization_ideas || [],
+                  target_audience: api.target_audience || null
                 }
               })
               .select()
@@ -141,7 +144,11 @@ router.post('/upload', upload.single('file'), async (req, res) => {
                 response_schema: ep.response_schema,
                 category: ep.category,
                 estimated_value: ep.estimated_value,
-                execution_steps: ep.execution_steps
+                execution_steps: ep.execution_steps,
+                metadata: {
+                  business_value: ep.business_value || null,
+                  potential_alerts: ep.potential_alerts || []
+                }
               }));
 
               console.log(`  🔍 Endpoints to insert:`, JSON.stringify(endpointsToInsert, null, 2));
@@ -322,10 +329,14 @@ router.post('/from-url', async (req, res) => {
                 document_id: document.id,
                 base_url: api.base_url,
                 name: api.name,
-                description: api.description,
-                auth_type: api.auth_type,
-                auth_details: api.auth_details,
-                execution_strategy: api.execution_strategy
+                execution_strategy: api.execution_strategy,
+                metadata: {
+                  auto_executable: api.auto_executable || false,
+                  extracted_credentials: api.extracted_credentials || null,
+                  business_potential: api.business_potential || null,
+                  monetization_ideas: api.monetization_ideas || [],
+                  target_audience: api.target_audience || null
+                }
               })
               .select()
               .single();
@@ -349,7 +360,11 @@ router.post('/from-url', async (req, res) => {
                 response_schema: ep.response_schema,
                 category: ep.category,
                 estimated_value: ep.estimated_value,
-                execution_steps: ep.execution_steps
+                execution_steps: ep.execution_steps,
+                metadata: {
+                  business_value: ep.business_value || null,
+                  potential_alerts: ep.potential_alerts || []
+                }
               }));
 
               await supabaseAdmin

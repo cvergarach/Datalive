@@ -22,29 +22,34 @@ class InsightGeneratorService {
     const isClaude = modelToUse === 'haiku' || modelToUse === 'sonnet';
     const effectiveModel = isClaude ? CLAUDE_MODEL_MAP[modelToUse] : modelToUse;
 
-    const prompt = `📊 TAREA: Generar Insights Estratégicos de Negocio 📊
+    const prompt = `📊 TAREA: Generación de Inteligencia Estratégica (Persona: Senior Strategy Consultant) 📊
         
-Tienes los siguientes datos provenientes de ejecuciones de API. Tu objetivo es transformarlos en 3-5 INSIGHTS CLAVE para un ejecutivo de nivel C.
+Transforma estos datos crudos en una brújula de decisiones para la alta gerencia. No reportes datos, reporta IMPACTO.
 
 REGLAS DE ORO:
-1. **IDIOMA**: 100% ESPAÑOL.
-2. **VALOR COMERCIAL**: No menciones JSON, endpoints o estados HTTP. Habla de eficiencia, ahorro, riesgos, clientes, ventas.
-3. **ACCIONABLE**: Cada insight debe llevar una acción clara recomendada.
+1. **PERSONA**: Actúa como un consultor de McKinsey/BCG. Tu lenguaje es ejecutivo, sobrio y enfocado en rentabilidad.
+2. **TEMAS CLAVE**: 
+   - **Arbitraje**: ¿Dónde estamos comprando caro o vendiendo barato?
+   - **Riesgo**: ¿Qué patrón indica que vamos a perder un contrato o cliente?
+   - **Crecimiento**: ¿Dónde hay un "océano azul" no explotado?
+3. **TONO**: 100% Español, sin tecnicismos de software.
 
 FORMATO JSON:
 {
   "insights": [
     {
-      "type": "opportunity|risk|efficiency|growth",
-      "title": "Título impacto",
-      "description": "Explicación breve",
-      "confidence": 0-1,
-      "actionable_next_step": "Qué debe hacer el gerente ahora mismo"
+      "type": "opportunity|risk|efficiency|arbitrage",
+      "title": "Conclusión Estratégica",
+      "description": "Análisis profundo del impacto",
+      "financial_impact": "Estimación de monto o % de ahorro/ganancia",
+      "confidence": 0.95,
+      "strategic_priority": "Alta/Media/Baja",
+      "actionable_next_step": "Acción inmediata para el CEO/Gerente"
     }
   ]
 }`;
 
-    console.log(`🧠 [INSIGHTS] Generating insights for project ${projectId} using ${effectiveModel}`);
+    console.log(`🧠 [INSIGHTS] Generating strategic insights for project ${projectId} using ${effectiveModel}`);
     return this._callAI(prompt, JSON.stringify(dataContent), isClaude, effectiveModel);
   }
 
@@ -53,38 +58,41 @@ FORMATO JSON:
     const isClaude = modelToUse === 'haiku' || modelToUse === 'sonnet';
     const effectiveModel = isClaude ? CLAUDE_MODEL_MAP[modelToUse] : modelToUse;
 
-    const prompt = `📊 TAREA: Diseñar Dashboard Ejecutivo con DATOS REALES 📊
+    const prompt = `📊 TAREA: Diseño de Cockpit Ejecutivo (Dashboard de Control Total) 📊
         
-Crea una propuesta de dashboard basada en los datos adjuntos. NO USES PLACEHOLDERS. Extrae los valores reales de los datos proporcionados para cada widget.
+Diseña una interfaz de control basada en datos reales. Cada widget debe responder a la pregunta: "¿Estamos ganando o perdiendo dinero?"
+
+REGLAS:
+1. **SIN PLACEHOLDERS**: Usa los datos reales del adjunto.
+2. **WIDGETS DE IMPACTO**:
+   - 'stat': Para KPIs críticos.
+   - 'bar/line': Para tendencias de mercado o competencia.
+   - 'pie': Para cuota de mercado o distribución de gasto.
+3. **LOGICA DE NEGOCIO**: Si ves datos de Mercado Público, enfócate en 'Tasa de Adjudicación', 'Ranking de Competidores' o 'Proyección de Gasto'.
 
 FORMATO JSON:
 {
   "dashboards": [
     {
-      "title": "Nombre del Tablero",
+      "title": "Panel de Control Estratégico",
       "widgets": [
         {
           "type": "bar|line|pie|stat",
-          "title": "Título de la Métrica",
-          "description": "Explicación de qué estamos viendo",
-          "data": [
-            { "label": "Enero", "value": 150 },
-            { "label": "Febrero", "value": 200 }
-          ],
-          "current_value": "200", 
-          "trend": "+15%",
-          "visual_config": { "color": "blue" }
+          "title": "Título Ejecutivo (ej: Eficiencia de Adjudicación)",
+          "description": "Explicación de la métrica de negocio",
+          "data": [ ... ],
+          "current_value": "valor", 
+          "trend": "+X% vs mes anterior",
+          "insight_label": "Breve conclusión del gráfico"
         }
       ]
     }
   ]
 }
 
-REGLAS:
-1. Extrae los datos del 'Dato de entrada' adjunto.
-2. Si es un 'stat', proporciona un 'current_value'.
-3. Si es un gráfico, proporciona un array 'data' con al menos 3 puntos.
-4. Si no hay suficientes datos, crea una proyección realista basada en la tendencia detectada.`;
+REGLAS TÉCNICAS:
+- 'data' debe ser un array de objetos {label, value}.
+- Si faltan datos, proyecta linealmente basado en la tendencia.`;
 
     console.log(`📊 [DASHBOARDS] Suggesting dashboards for project ${projectId} using ${effectiveModel}`);
     return this._callAI(prompt, JSON.stringify(dataContent), isClaude, effectiveModel);
