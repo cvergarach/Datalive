@@ -225,6 +225,7 @@ BEGIN ANALYSIS:`;
   console.log('🔍 DEBUG - Text content length:', textContent.length);
   console.log('🔍 DEBUG - First 500 chars:', textContent.substring(0, 500));
 
+  const startTime = Date.now();
   const result = await claude.messages.create({
     model: modelName,
     max_tokens: 8192,
@@ -235,7 +236,8 @@ BEGIN ANALYSIS:`;
     }]
   });
 
-  console.log('🤖 Claude Response received!');
+  const duration = (Date.now() - startTime) / 1000;
+  console.log(`🤖 Claude Response received in ${duration.toFixed(2)}s!`);
   console.log('📊 Metadata:', {
     model: result.model,
     stopReason: result.stop_reason,

@@ -127,8 +127,12 @@ class GeminiService {
    */
   async deleteFile(fileName) {
     try {
+      if (!fileName) {
+        console.warn('⚠️ No se proporcionó nombre de archivo para eliminar de Gemini');
+        return;
+      }
       await client.files.delete({ name: fileName });
-      console.log(`🗑️ File deleted from Gemini: ${fileName}`);
+      console.log(`🗑️ Archivo eliminado de Gemini: ${fileName}`);
     } catch (error) {
       console.error('Error deleting file:', error);
       throw new Error(`Failed to delete file: ${error.message}`);
