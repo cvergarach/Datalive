@@ -15,7 +15,35 @@ class MCPClient {
     };
   }
 
-  async call(serverName, tool, params = {}) {
+  async call(serverName, tool, params = {}, retries = 3) {
+    let lastError;
+    let delay = 2000; // Start with 2s delay
+
+    for (let i = 0; i <= retries; i++) {
+      try {
+        return await this._executeCall(serverName, tool, params);
+      } catch (error) {
+        lastError = error;
+
+        // Determine if error is retryable (Network, 502, 503, 500 or Timeout)
+        const isRetryable = !error.response ||
+          [500, 502, 503, 504].includes(error.response.status) ||
+          error.code === 'ECONNABORTED';
+
+        if (i < retries && isRetryable) {
+          console.warn(`⚠️ MCP Call failed (${serverName}.${tool}). Retrying in ${delay}ms... (${i + 1}/${retries})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay *= 2; // Exponential backoff
+        } else {
+          break;
+        }
+      }
+    }
+
+    throw lastError;
+  }
+
+  async _executeCall(serverName, tool, params = {}) {
     const serverUrl = this.servers[serverName];
 
     if (!serverUrl) {
@@ -42,9 +70,9 @@ class MCPClient {
       console.error(`❌ Error calling MCP ${serverName}.${tool}:`, error.message);
       if (error.response) {
         console.error(`Status: ${error.response.status}`);
-        console.error(`Data:`, error.response.data);
+        console.error(`Data:`, JSON.stringify(error.response.data));
       }
-      throw new Error(`MCP call failed: ${error.message}`);
+      throw error; // Rethrow to let call() handle retries
     }
   }
 

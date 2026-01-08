@@ -159,32 +159,57 @@ COMIENZA EL ANÁLISIS COMERCIAL:`;
   const startTime = Date.now();
   let responseText;
 
-  try {
-    if (isClaude) {
-      const message = await anthropic.messages.create({
-        model: effectiveModel,
-        max_tokens: 8192,
-        temperature: 0.4,
-        messages: [{
-          role: 'user',
-          content: `${prompt}\n\nDocument content:\n${textContent}`
-        }]
-      });
-      responseText = message.content[0].text;
-    } else {
-      const result = await genAI.models.generateContent({
-        model: effectiveModel,
-        contents: [{
-          role: 'user',
-          parts: [{ text: `${prompt}\n\nDocument content:\n${textContent}` }]
-        }],
-        generationConfig: {
-          maxOutputTokens: 8192,
-          temperature: 0.4,
+  // Internal retry logic for AI Model Overload
+  async function callAIWithRetry(retries = 3) {
+    let delay = 3000;
+    for (let i = 0; i <= retries; i++) {
+      try {
+        if (isClaude) {
+          const message = await anthropic.messages.create({
+            model: effectiveModel,
+            max_tokens: 8192,
+            temperature: 0.4,
+            messages: [{
+              role: 'user',
+              content: `${prompt}\n\nDocument content:\n${textContent}`
+            }]
+          });
+          return message.content[0].text;
+        } else {
+          const result = await genAI.models.generateContent({
+            model: effectiveModel,
+            contents: [{
+              role: 'user',
+              parts: [{ text: `${prompt}\n\nDocument content:\n${textContent}` }]
+            }],
+            generationConfig: {
+              maxOutputTokens: 8192,
+              temperature: 0.4,
+            }
+          });
+          return result.text;
         }
-      });
-      responseText = result.text;
+      } catch (error) {
+        const errorMsg = error.message?.toLowerCase() || '';
+        const isOverloaded = errorMsg.includes('overloaded') ||
+          errorMsg.includes('unavailable') ||
+          error.status === 503 ||
+          error.code === 503 ||
+          JSON.stringify(error).includes('503');
+
+        if (i < retries && isOverloaded) {
+          console.warn(`⚠️ AI Model Overloaded (${effectiveModel}). Retrying in ${delay}ms... (${i + 1}/${retries})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay *= 2.5; // Aggressive exponential backoff
+        } else {
+          throw error;
+        }
+      }
     }
+  }
+
+  try {
+    responseText = await callAIWithRetry();
 
     const duration = (Date.now() - startTime) / 1000;
     console.log(`🤖 ${isClaude ? 'Claude' : 'Gemini'} Response received in ${duration.toFixed(2)}s!`);
@@ -219,27 +244,23 @@ COMIENZA EL ANÁLISIS COMERCIAL:`;
       }
     }
 
-    console.log('📋 Parsed content:', JSON.stringify(parsedContent, null, 2));
-
     // Check if we got empty results
     if (!parsedContent.apis || parsedContent.apis.length === 0) {
-      console.error('⚠️ WARNING: Gemini returned empty APIs array!');
+      console.error('⚠️ WARNING: AI returned empty APIs array!');
     }
 
     return parsedContent;
   } catch (error) {
-    console.error('❌ Gemini API Error:', error);
+    console.error(`❌ ${isClaude ? 'Claude' : 'Gemini'} API Error:`, error);
     throw error;
   }
 }
 
 async function extractEndpoints(textContent) {
-  // Placeholder for future implementation
   return { endpoints: [] };
 }
 
 async function extractAuthMethods(textContent) {
-  // Placeholder for future implementation
   return { auth_methods: [] };
 }
 

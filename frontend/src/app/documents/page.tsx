@@ -5,7 +5,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { FileText, Upload, Folder, Trash2, AlertCircle, Info } from 'lucide-react';
+import { FileText, Upload, Folder, Trash2, AlertCircle, Info, RefreshCw } from 'lucide-react';
 import { DeleteConfirmation } from '@/components/shared/DeleteConfirmation';
 
 interface Project {
@@ -118,6 +118,21 @@ export default function DocumentsPage() {
         if (!docToDelete || !selectedProject) return;
         await api.delete(`/projects/${selectedProject}/documents/${docToDelete.id}`);
         fetchDocuments(selectedProject);
+    };
+
+    const handleRetryAnalysis = async (documentId: string) => {
+        if (!selectedProject) return;
+        try {
+            setUploading(true);
+            await api.post(`/projects/${selectedProject}/documents/${documentId}/retry`);
+            // Refresh list to show 'analyzed' status
+            fetchDocuments(selectedProject);
+        } catch (error: any) {
+            console.error('Error retrying analysis:', error);
+            alert(error.response?.data?.error || 'Failed to restart analysis');
+        } finally {
+            setUploading(false);
+        }
     };
 
     return (
@@ -253,6 +268,16 @@ export default function DocumentsPage() {
                                                                     'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>
                                                             {doc.status.toUpperCase()}
                                                         </span>
+                                                        {doc.status === 'error' && (
+                                                            <button
+                                                                onClick={() => handleRetryAnalysis(doc.id)}
+                                                                className="text-blue-500 hover:text-blue-700 transition-colors"
+                                                                title="Reintentar análisis"
+                                                                disabled={uploading}
+                                                            >
+                                                                <RefreshCw className={`h-4 w-4 ${uploading ? 'animate-spin' : ''}`} />
+                                                            </button>
+                                                        )}
                                                         {doc.status === 'error' && doc.error_message && (
                                                             <button
                                                                 onClick={() => setExpandedError(expandedError === doc.id ? null : doc.id)}
