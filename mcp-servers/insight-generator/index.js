@@ -44,28 +44,48 @@ app.post('/mcp/call', async (req, res) => {
   }
 });
 
-async function callAI(prompt, settings) {
+async function callAI(prompt, settings, retries = 3) {
   const modelToUse = settings?.ai_model || 'sonnet';
   const isClaude = modelToUse === 'haiku' || modelToUse === 'sonnet';
   const effectiveModel = isClaude ? (CLAUDE_MODEL_MAP[modelToUse] || DEFAULT_CLAUDE_MODEL) : 'gemini-2.5-flash';
 
-  console.log(`🧠 Calling ${isClaude ? 'Claude' : 'Gemini'} (${effectiveModel})...`);
+  let delay = 3000;
+  for (let i = 0; i <= retries; i++) {
+    try {
+      console.log(`🧠 Calling ${isClaude ? 'Claude' : 'Gemini'} (${effectiveModel})... (Attempt ${i + 1})`);
 
-  if (isClaude) {
-    const message = await anthropic.messages.create({
-      model: effectiveModel,
-      max_tokens: 4000,
-      temperature: 0.4,
-      messages: [{ role: 'user', content: prompt }]
-    });
-    return message.content[0].text;
-  } else {
-    const result = await genAI.models.generateContent({
-      model: effectiveModel,
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: 4000, temperature: 0.4 }
-    });
-    return result.text;
+      if (isClaude) {
+        const message = await anthropic.messages.create({
+          model: effectiveModel,
+          max_tokens: 4000,
+          temperature: 0.4,
+          messages: [{ role: 'user', content: prompt }]
+        });
+        return message.content[0].text;
+      } else {
+        const result = await genAI.models.generateContent({
+          model: effectiveModel,
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 4000, temperature: 0.4 }
+        });
+        return result.text;
+      }
+    } catch (error) {
+      const errorMsg = error.message?.toLowerCase() || '';
+      const isOverloaded = errorMsg.includes('overloaded') ||
+        errorMsg.includes('unavailable') ||
+        error.status === 503 ||
+        error.code === 503 ||
+        JSON.stringify(error).includes('503');
+
+      if (i < retries && isOverloaded) {
+        console.warn(`⚠️ AI Model Overloaded (${effectiveModel}). Retrying in ${delay}ms... (${i + 1}/${retries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2.5; // Aggressive exponential backoff
+      } else {
+        throw error;
+      }
+    }
   }
 }
 

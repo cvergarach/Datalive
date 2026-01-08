@@ -1,4 +1,4 @@
--- Migration: Fix API configuration test status constraint
+--- Migration: Fix API configuration test status constraint
 -- This migration allows 'pending' as a valid status in api_configurations
 
 -- 1. Drop the existing constraint
