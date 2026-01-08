@@ -7,11 +7,11 @@ async function testMCP() {
 
         // Test MCP call endpoint
         const response = await axios.post('http://localhost:3001/mcp/call', {
-            method: 'analyze_api_document',
+            tool: 'analyze_api_document',
             params: {
-                geminiUri: 'https://generativelanguage.googleapis.com/v1beta/files/test',
-                projectId: 'test-project',
-                mimeType: 'application/pdf'
+                text_content: 'API Documentation: GET /api/v1/users List all users. Requires Basic Auth.',
+                project_id: 'test-project',
+                mime_type: 'text/plain'
             }
         });
 
