@@ -66,7 +66,7 @@ app.post('/mcp/call', async (req, res) => {
 });
 
 async function analyzeAPIDocument(textContent, projectId, mimeType = 'application/pdf', settings = null) {
-  const modelToUse = settings?.ai_model || DEFAULT_GEMINI_MODEL;
+  const modelToUse = settings?.ai_model || 'gemini-2.5-flash';
   const isClaude = modelToUse === 'haiku' || modelToUse === 'sonnet';
   const effectiveModel = isClaude ? CLAUDE_MODEL_MAP[modelToUse] : modelToUse;
 
