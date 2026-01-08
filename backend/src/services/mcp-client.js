@@ -65,8 +65,10 @@ class MCPClient {
         }
       });
 
+      console.log(`📥 MCP Response Status: ${response.status} (tool: ${tool})`);
       return response.data;
     } catch (error) {
+
       console.error(`❌ Error calling MCP ${serverName}.${tool}:`, error.message);
       if (error.response) {
         console.error(`Status: ${error.response.status}`);

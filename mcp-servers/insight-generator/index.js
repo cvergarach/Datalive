@@ -20,9 +20,9 @@ const CLAUDE_MODEL_MAP = {
 
 app.post('/mcp/call', async (req, res) => {
   try {
-    const { tool, params } = req.body;
-
+    console.log(`📡 [MCP] Received tool call: ${tool}`);
     if (tool === 'generate_insights') {
+      console.log(`🧠 [MCP] Params: project_id=${params.project_id}, data_len=${params.data_content?.length || 0}`);
       const result = await generateInsights(params.project_id, params.data_content, params.settings);
       return res.json(result);
     }
@@ -119,9 +119,24 @@ ${dataString}
 `;
 
 
+  console.log(`🤖 [MCP] AI prompt generated. Length: ${prompt.length}. Calling AI...`);
   const response = await callAI(prompt, settings);
+  console.log(`📥 [MCP] AI raw response length: ${response?.length || 0}`);
+
   const jsonMatch = response.match(/\{[\s\S]*\}/);
-  return jsonMatch ? JSON.parse(jsonMatch[0]) : { insights: [] };
+  if (!jsonMatch) {
+    console.error(`❌ [MCP] AI response did not contain valid JSON:`, response.substring(0, 200));
+    return { insights: [] };
+  }
+
+  try {
+    const parsed = JSON.parse(jsonMatch[0]);
+    console.log(`✅ [MCP] Successfully parsed ${parsed.insights?.length || 0} insights.`);
+    return parsed;
+  } catch (e) {
+    console.error(`❌ [MCP] JSON Parse Error:`, e.message);
+    return { insights: [] };
+  }
 }
 
 async function suggestDashboards(projectId, dataContent, settings = null) {
@@ -149,9 +164,24 @@ Retorna UNICAMENTE un objeto JSON válido:
 DATOS REALES:
 ${JSON.stringify(dataContent)}`;
 
+  console.log(`🤖 [MCP] AI prompt for Dashboard. Length: ${prompt.length}. Calling AI...`);
   const response = await callAI(prompt, settings);
+  console.log(`📥 [MCP] AI Dashboard Response length: ${response?.length || 0}`);
+
   const jsonMatch = response.match(/\{[\s\S]*\}/);
-  return jsonMatch ? JSON.parse(jsonMatch[0]) : { dashboards: [] };
+  if (!jsonMatch) {
+    console.error(`❌ [MCP] Dashboard AI response did not contain valid JSON.`);
+    return { dashboards: [] };
+  }
+
+  try {
+    const parsed = JSON.parse(jsonMatch[0]);
+    console.log(`✅ [MCP] Successfully parsed ${parsed.dashboards?.length || 0} dashboard suggestions.`);
+    return parsed;
+  } catch (e) {
+    console.error(`❌ [MCP] Dashboard JSON Parse Error:`, e.message);
+    return { dashboards: [] };
+  }
 }
 
 async function generateReport(projectId, config, settings = null) {

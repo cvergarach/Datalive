@@ -20,16 +20,30 @@ router.post('/generate', async (req, res) => {
     const { projectId } = req.params;
     console.log(`📊 Suggesting dashboards for project ${projectId}...`);
 
-    const { data: recentRecords } = await supabaseAdmin
+    console.log(`📊 [DASHBOARDS] Starting suggestion for project: ${projectId}`);
+
+    const { data: recentRecords, error: fetchError } = await supabaseAdmin
       .from('api_data')
       .select('data, executed_at')
       .eq('project_id', projectId)
       .order('executed_at', { ascending: false })
-      .limit(3);
+      .limit(5);
 
-    const result = await mcpClient.suggestDashboards(projectId, recentRecords || []);
+    if (fetchError) console.error(`❌ [DASHBOARDS] Error fetching recent records:`, fetchError);
+    console.log(`🔍 [DASHBOARDS] Recent records found: ${recentRecords?.length || 0}`);
 
-    if (result.dashboards && result.dashboards.length > 0) {
+    if (!recentRecords || recentRecords.length === 0) {
+      console.warn('⚠️ [DASHBOARDS] No data found to suggest dashboards.');
+      return res.json({ dashboards: [], message: 'No hay datos disponibles para crear un tablero. Ejecuta una API primero.' });
+    }
+
+    console.log(`🤖 [DASHBOARDS] Calling MCP Insight Generator for dashboards...`);
+    const result = await mcpClient.suggestDashboards(projectId, recentRecords);
+    console.log(`📥 [DASHBOARDS] MCP Result received:`, result ? 'SUCCESS' : 'NULL/ERROR');
+
+    if (result && result.dashboards && result.dashboards.length > 0) {
+      console.log(`💾 [DASHBOARDS] Saving ${result.dashboards.length} dashboard(s) to database...`);
+
 
       console.log(`💾 Saving ${result.dashboards.length} dashboard suggestion(s)...`);
 

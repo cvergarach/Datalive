@@ -27,21 +27,46 @@ router.post('/generate', async (req, res) => {
     const { projectId } = req.params;
     const { data_ids } = req.body;
 
-    console.log(`🧠 Generating insights for project ${projectId}...`);
+    console.log(`🧠 [INSIGHTS] Starting generation for project: ${projectId}`);
 
-    // Fetch actual data content if data_ids are provided
+    // Fetch actual data content if data_ids are provided, or fetch most recent if empty
     let dataContent = [];
     if (data_ids && data_ids.length > 0) {
-      const { data: records } = await supabaseAdmin
+      console.log(`🔍 [INSIGHTS] Fetching specifically ${data_ids.length} records by ID`);
+      const { data: records, error: fetchError } = await supabaseAdmin
         .from('api_data')
         .select('data, executed_at')
         .in('id', data_ids);
+
+      if (fetchError) console.error(`❌ [INSIGHTS] Error fetching specific records:`, fetchError);
+      dataContent = records || [];
+    } else {
+      console.log(`🔍 [INSIGHTS] No data_ids provided, fetching last 10 records for project ${projectId}`);
+      const { data: records, error: fetchError } = await supabaseAdmin
+        .from('api_data')
+        .select('data, executed_at')
+        .eq('project_id', projectId)
+        .order('executed_at', { ascending: false })
+        .limit(10);
+
+      if (fetchError) console.error(`❌ [INSIGHTS] Error fetching recent records:`, fetchError);
       dataContent = records || [];
     }
 
-    const result = await mcpClient.generateInsights(projectId, dataContent);
+    console.log(`📊 [INSIGHTS] Total data records found for analysis: ${dataContent.length}`);
 
-    if (result.insights && result.insights.length > 0) {
+    if (dataContent.length === 0) {
+      console.warn('⚠️ [INSIGHTS] No data found to generate insights.');
+      return res.json({ insights: [], message: 'No hay datos disponibles para analizar. Ejecuta una API primero.' });
+    }
+
+    console.log(`🤖 [INSIGHTS] Calling MCP Insight Generator...`);
+    const result = await mcpClient.generateInsights(projectId, dataContent);
+    console.log(`📥 [INSIGHTS] MCP Result received:`, result ? 'SUCCESS' : 'NULL/ERROR');
+
+    if (result && result.insights && result.insights.length > 0) {
+      console.log(`💾 [INSIGHTS] Saving ${result.insights.length} insight(s) to database...`);
+
       console.log(`💾 Saving ${result.insights.length} insight(s) to database...`);
 
 
