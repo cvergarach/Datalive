@@ -108,9 +108,13 @@ router.post('/:chatId/messages', async (req, res) => {
             .order('created_at', { ascending: false })
             .limit(5); // Last 5 technical captures
 
+        console.log(`🔍 Chat context for project ${projectId}: found ${apiData?.length || 0} records`);
+
         // 3. Generate AI response
         let aiResponse = "";
         const context = JSON.stringify(apiData, null, 2);
+        console.log(`📊 Context string length: ${context.length} characters`);
+
 
         const systemPrompt = `Eres un asistente experto en análisis de datos comerciales para la plataforma DataLive.
 TU OBJETIVO: Responder las dudas del usuario basándote en los DATOS TÉCNICOS capturados de las APIs.
