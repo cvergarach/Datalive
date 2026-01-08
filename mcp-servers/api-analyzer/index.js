@@ -155,8 +155,10 @@ RETORNA SOLO JSON VÁLIDO. SIN ETIQUETAS DE MARKDOWN.
 COMIENZA EL ANÁLISIS COMERCIAL:`;
 
   console.log(`📥 Analyzing text content with ${isClaude ? 'Claude' : 'Gemini'} (${effectiveModel})...`);
+  console.log(`📊 Payload size: ${textContent?.length || 0} chars`);
 
   const startTime = Date.now();
+
   let responseText;
 
   // Internal retry logic for AI Model Overload
@@ -273,3 +275,15 @@ server.on('error', (error) => {
   console.error('❌ Server failed to start:', error);
   process.exit(1);
 });
+
+// Generic process error handlers to prevent silent crashes
+process.on('uncaughtException', (error) => {
+  console.error('💥 CRITICAL: Uncaught Exception:', error);
+  // Give Render logs 1s to flush
+  setTimeout(() => process.exit(1), 1000);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 CRITICAL: Unhandled Rejection at:', promise, 'reason:', reason);
+});
+

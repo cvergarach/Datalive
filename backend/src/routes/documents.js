@@ -519,7 +519,6 @@ router.post('/:documentId/retry', async (req, res) => {
     // 1. Get document content
     const { data: document, error: fetchError } = await supabaseAdmin
       .from('api_documents')
-      .from('api_documents')
       .select('*')
       .eq('id', documentId)
       .eq('project_id', projectId)
