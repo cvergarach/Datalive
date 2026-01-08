@@ -1,7 +1,9 @@
 import express from 'express';
 import { supabase, supabaseAdmin } from '../config/supabase.js';
 import mcpClient from '../services/mcp-client.js';
+import intelligenceService from '../services/intelligence.js';
 import { authMiddleware, checkProjectAccess } from '../middleware/auth.js';
+
 
 const router = express.Router({ mergeParams: true });
 router.use(authMiddleware);
@@ -272,6 +274,12 @@ router.post('/:apiId/execute', async (req, res) => {
           executed_at: new Date().toISOString(),
           status: response.ok ? 'success' : 'error'
         });
+
+      // Trigger Auto-Intelligence in background
+      intelligenceService.triggerAutoIntelligence(projectId, parsedData).catch(err => {
+        console.error('⚠️ Background Auto-Intelligence Error:', err.message);
+      });
+
 
 
     } catch (error) {

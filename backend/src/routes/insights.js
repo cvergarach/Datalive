@@ -28,10 +28,22 @@ router.post('/generate', async (req, res) => {
     const { data_ids } = req.body;
 
     console.log(`🧠 Generating insights for project ${projectId}...`);
-    const result = await mcpClient.generateInsights(projectId, data_ids);
+
+    // Fetch actual data content if data_ids are provided
+    let dataContent = [];
+    if (data_ids && data_ids.length > 0) {
+      const { data: records } = await supabaseAdmin
+        .from('api_data')
+        .select('data, executed_at')
+        .in('id', data_ids);
+      dataContent = records || [];
+    }
+
+    const result = await mcpClient.generateInsights(projectId, dataContent);
 
     if (result.insights && result.insights.length > 0) {
       console.log(`💾 Saving ${result.insights.length} insight(s) to database...`);
+
 
       const insightsToInsert = result.insights.map(insight => ({
         project_id: projectId,

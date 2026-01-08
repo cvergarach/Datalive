@@ -138,20 +138,20 @@ class MCPClient {
   }
 
   // Insight Generator Methods
-  async generateInsights(projectId, dataIds) {
+  async generateInsights(projectId, dataContent) {
     const settings = await this._getProjectSettings(projectId);
     return this.call('insightGenerator', 'generate_insights', {
       project_id: projectId,
-      data_ids: dataIds,
+      data_content: dataContent,
       settings
     });
   }
 
-  async suggestDashboards(projectId, dataSchema) {
+  async suggestDashboards(projectId, dataContent) {
     const settings = await this._getProjectSettings(projectId);
     return this.call('insightGenerator', 'suggest_dashboards', {
       project_id: projectId,
-      data_schema: dataSchema,
+      data_content: dataContent,
       settings
     });
   }

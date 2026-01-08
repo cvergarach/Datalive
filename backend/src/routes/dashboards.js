@@ -18,12 +18,19 @@ router.get('/', async (req, res) => {
 router.post('/generate', async (req, res) => {
   try {
     const { projectId } = req.params;
-    const { data_schema } = req.body;
-
     console.log(`📊 Suggesting dashboards for project ${projectId}...`);
-    const result = await mcpClient.suggestDashboards(projectId, data_schema);
+
+    const { data: recentRecords } = await supabaseAdmin
+      .from('api_data')
+      .select('data, executed_at')
+      .eq('project_id', projectId)
+      .order('executed_at', { ascending: false })
+      .limit(3);
+
+    const result = await mcpClient.suggestDashboards(projectId, recentRecords || []);
 
     if (result.dashboards && result.dashboards.length > 0) {
+
       console.log(`💾 Saving ${result.dashboards.length} dashboard suggestion(s)...`);
 
       const dashboardsToInsert = result.dashboards.map(db => ({
