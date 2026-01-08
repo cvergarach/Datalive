@@ -9,26 +9,35 @@ const PORT = process.env.PORT || 3002;
 app.use(express.json());
 
 app.post('/mcp/call', async (req, res) => {
-  try {
-    const { tool, params } = req.body;
+  const { tool, params } = req.body;
+  console.log(`📡 MCP API Executor Call: ${tool}`);
 
+  try {
     if (tool === 'test_api_connection') {
+      console.log(`🧪 Testing connection to: ${params.base_url}`);
       const result = await testAPIConnection(params.base_url, params.auth_config);
+      console.log(`✅ Test result: ${result.success ? 'Success' : 'Failed'}`);
       return res.json(result);
     }
 
     if (tool === 'execute_api_call') {
+      console.log(`🚀 Executing ${params.method} ${params.base_url}${params.endpoint}`);
       const result = await executeAPICall(params);
+      console.log(`🏁 Execution complete. Success: ${result.success}`);
       return res.json(result);
     }
 
     if (tool === 'batch_execute') {
+      console.log(`📦 Batch executing ${params.endpoints?.length || 0} endpoints`);
       const result = await batchExecute(params.endpoints, params.auth, params.project_id);
+      console.log(`✅ Batch execution finished`);
       return res.json(result);
     }
 
+    console.warn(`⚠️ Unknown tool called: ${tool}`);
     res.status(400).json({ error: 'Unknown tool' });
   } catch (error) {
+    console.error(`❌ MCP API Executor Error (${tool}):`, error.message);
     res.status(500).json({ error: error.message });
   }
 });
