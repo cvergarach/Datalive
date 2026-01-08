@@ -1,147 +1,220 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
-import { Save, Info } from 'lucide-react';
+import { Save, Info, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 export default function SettingsPage() {
-    const [selectedModel, setSelectedModel] = useState(
-        typeof window !== 'undefined' ? localStorage.getItem('claude_model') || 'haiku' : 'haiku'
-    );
+    const [projects, setProjects] = useState<any[]>([]);
+    const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+    const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
 
     const models = [
         {
-            id: 'haiku',
-            name: 'Claude 3.5 Haiku',
-            description: 'Rápido y económico - Ideal para pruebas y desarrollo',
-            pricing: {
-                input: '$0.80 por 1M tokens',
-                output: '$4 por 1M tokens'
-            },
-            estimatedCost: '~$0.01 por 10 análisis',
+            id: 'gemini-2.5-flash',
+            provider: 'Google',
+            name: 'Gemini 2.5 Flash',
+            description: 'Ultra-rápido y optimizado para análisis de gran volumen. Ideal para DataLive.',
+            pricing: 'Económico',
             recommended: true
         },
         {
+            id: 'haiku',
+            provider: 'Anthropic',
+            name: 'Claude 3.5 Haiku',
+            description: 'Respuesta rápida y eficiente para tareas de descubrimiento sencillas.',
+            pricing: 'Económico',
+            recommended: false
+        },
+        {
             id: 'sonnet',
+            provider: 'Anthropic',
             name: 'Claude 3.5 Sonnet',
-            description: 'Mayor calidad - Mejor para documentación compleja',
-            pricing: {
-                input: '$3 por 1M tokens',
-                output: '$15 por 1M tokens'
-            },
-            estimatedCost: '~$0.03 por 10 análisis',
+            description: 'Máxima inteligencia y razonamiento para documentación compleja.',
+            pricing: 'Premium',
             recommended: false
         }
     ];
 
-    const handleSave = () => {
-        localStorage.setItem('claude_model', selectedModel);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
+    useEffect(() => {
+        fetchProjects();
+    }, []);
+
+    useEffect(() => {
+        if (selectedProjectId) {
+            const project = projects.find(p => p.id === selectedProjectId);
+            if (project?.settings?.ai_model) {
+                setSelectedModel(project.settings.ai_model);
+            }
+        }
+    }, [selectedProjectId, projects]);
+
+    const fetchProjects = async () => {
+        try {
+            setLoading(true);
+            const { data } = await api.get('/projects');
+            setProjects(data.projects || []);
+            if (data.projects?.length > 0) {
+                setSelectedProjectId(data.projects[0].id);
+            }
+        } catch (error) {
+            console.error('Error fetching projects:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSave = async () => {
+        if (!selectedProjectId) return;
+
+        try {
+            setSaving(true);
+            await api.put(`/projects/${selectedProjectId}`, {
+                settings: {
+                    ai_model: selectedModel,
+                    language: 'es',
+                    tone: 'commercial'
+                }
+            });
+            setSaved(true);
+            // Update local state
+            setProjects(projects.map(p =>
+                p.id === selectedProjectId
+                    ? { ...p, settings: { ...p.settings, ai_model: selectedModel } }
+                    : p
+            ));
+            setTimeout(() => setSaved(false), 3000);
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            alert('Error al guardar la configuración');
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
-        <div className="flex h-screen">
+        <div className="flex h-screen bg-gray-900 text-gray-100">
             <Sidebar />
             <div className="flex-1 overflow-auto">
-                <Header title="Configuración" subtitle="Personaliza tu experiencia con DataLive" />
-                <div className="p-6 max-w-4xl">
-                    {/* Claude Model Selection */}
-                    <div className="bg-gray-800 rounded-lg p-6 mb-6">
-                        <div className="flex items-center gap-2 mb-4">
-                            <h2 className="text-xl font-semibold text-white">Modelo de IA</h2>
-                            <div className="group relative">
-                                <Info className="w-5 h-5 text-gray-400 cursor-help" />
-                                <div className="absolute left-0 top-6 w-64 bg-gray-900 text-sm text-gray-300 p-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                                    Selecciona el modelo de Claude que se utilizará para analizar documentación de APIs
-                                </div>
+                <Header title="Configuración Global" subtitle="Gestión de modelos de IA y preferencias del sistema" />
+
+                <div className="p-8 max-w-4xl mx-auto space-y-8">
+
+                    {/* Project Selection */}
+                    <section className="bg-gray-800/50 rounded-xl border border-gray-700 p-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-blue-500/20 rounded-lg">
+                                <ChevronDown className="w-5 h-5 text-blue-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold">Proyecto a Configurar</h2>
+                                <p className="text-sm text-gray-400">Selecciona qué proyecto quieres personalizar</p>
                             </div>
                         </div>
 
-                        <div className="space-y-4">
+                        <select
+                            value={selectedProjectId}
+                            onChange={(e) => setSelectedProjectId(e.target.value)}
+                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer"
+                        >
+                            {projects.map(p => (
+                                <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                        </select>
+                    </section>
+
+                    {/* AI Model Selection */}
+                    <section className="bg-gray-800/50 rounded-xl border border-gray-700 p-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-purple-500/20 rounded-lg">
+                                <Info className="w-5 h-5 text-purple-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold">Cerebro de Inteligencia Artificial</h2>
+                                <p className="text-sm text-gray-400">El modelo seleccionado procesará tus documentos y generará el chat</p>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-4">
                             {models.map((model) => (
                                 <div
                                     key={model.id}
                                     onClick={() => setSelectedModel(model.id)}
                                     className={`
-                    relative p-4 rounded-lg border-2 cursor-pointer transition-all
-                    ${selectedModel === model.id
-                                            ? 'border-yellow-400 bg-yellow-400/10'
-                                            : 'border-gray-700 bg-gray-900 hover:border-gray-600'
+                                        relative p-5 rounded-xl border-2 cursor-pointer transition-all duration-200
+                                        ${selectedModel === model.id
+                                            ? 'border-blue-500 bg-blue-500/10'
+                                            : 'border-gray-700 bg-gray-900/50 hover:border-gray-600'
                                         }
-                  `}
+                                    `}
                                 >
                                     {model.recommended && (
-                                        <div className="absolute top-2 right-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded">
-                                            RECOMENDADO
+                                        <div className="absolute top-4 right-4 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+                                            Recomendado
                                         </div>
                                     )}
 
-                                    <div className="flex items-start gap-4">
-                                        <input
-                                            type="radio"
-                                            checked={selectedModel === model.id}
-                                            onChange={() => setSelectedModel(model.id)}
-                                            className="mt-1 w-4 h-4 text-yellow-400 focus:ring-yellow-400"
-                                        />
+                                    <div className="flex gap-4">
+                                        <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedModel === model.id ? 'border-blue-500 bg-blue-500' : 'border-gray-600'
+                                            }`}>
+                                            {selectedModel === model.id && <div className="w-2 h-2 bg-white rounded-full" />}
+                                        </div>
 
                                         <div className="flex-1">
-                                            <h3 className="text-lg font-semibold text-white mb-1">{model.name}</h3>
-                                            <p className="text-gray-400 text-sm mb-3">{model.description}</p>
-
-                                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                                <div>
-                                                    <p className="text-gray-500">Entrada</p>
-                                                    <p className="text-gray-300">{model.pricing.input}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-gray-500">Salida</p>
-                                                    <p className="text-gray-300">{model.pricing.output}</p>
-                                                </div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-[10px] font-bold text-gray-500 uppercase">{model.provider}</span>
+                                                <h3 className="text-lg font-bold text-white">{model.name}</h3>
                                             </div>
+                                            <p className="text-gray-400 text-sm">{model.description}</p>
 
-                                            <div className="mt-3 pt-3 border-t border-gray-700">
-                                                <p className="text-xs text-gray-500">Costo estimado</p>
-                                                <p className="text-sm font-semibold text-yellow-400">{model.estimatedCost}</p>
+                                            <div className="mt-4 flex items-center gap-4 text-xs">
+                                                <span className="text-gray-500">Tier: <span className="text-gray-300">{model.pricing}</span></span>
+                                                <span className="text-blue-400 font-semibold cursor-pointer hover:underline">Ver detalles técnicos</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </section>
 
-                    {/* Save Button */}
-                    <div className="flex items-center gap-4">
+                    {/* Action Bar */}
+                    <div className="flex items-center justify-between pt-4">
+                        <div className="flex items-center gap-3">
+                            {saved && (
+                                <div className="flex items-center gap-2 text-green-400 font-bold text-sm animate-in fade-in slide-in-from-left-4">
+                                    <CheckCircle2 className="w-5 h-5" />
+                                    Configuración Aplicada Exitosamente
+                                </div>
+                            )}
+                        </div>
+
                         <button
                             onClick={handleSave}
-                            className="flex items-center gap-2 bg-yellow-400 text-black px-6 py-3 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
+                            disabled={saving}
+                            className={`
+                                flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all shadow-lg
+                                ${saving
+                                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                    : 'bg-blue-600 text-white hover:bg-blue-500 hover:scale-105 active:scale-95'
+                                }
+                            `}
                         >
-                            <Save className="w-5 h-5" />
-                            Guardar Configuración
+                            {saving ? 'Guardando...' : <><Save className="w-5 h-5" /> Guardar Cambios</>}
                         </button>
-
-                        {saved && (
-                            <div className="text-green-400 font-medium animate-fade-in">
-                                ✓ Configuración guardada
-                            </div>
-                        )}
                     </div>
 
-                    {/* Info Box */}
-                    <div className="mt-8 bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                        <div className="flex gap-3">
-                            <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                            <div className="text-sm text-gray-300">
-                                <p className="font-semibold text-blue-400 mb-1">Nota sobre los costos</p>
-                                <p>
-                                    Los costos mostrados son estimaciones basadas en análisis típicos de documentación API.
-                                    El costo real puede variar según la complejidad y tamaño de los documentos.
-                                </p>
-                            </div>
-                        </div>
+                    {/* Bottom Info */}
+                    <div className="bg-gray-800/30 rounded-xl p-5 border border-gray-700/50">
+                        <p className="text-xs text-gray-500 leading-relaxed">
+                            <strong className="text-gray-400">Nota sobre persistencia:</strong> Esta configuración se guarda directamente en la base de datos de DataLive.
+                            Cualquier cambio afectará inmediatamente a los servicios de análisis de documentos y al asistente de chat para este proyecto específico.
+                        </p>
                     </div>
                 </div>
             </div>

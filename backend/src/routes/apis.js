@@ -166,12 +166,17 @@ router.post('/:apiId/execute', async (req, res) => {
         headers['Authorization'] = `Bearer ${credentials.api_key}`;
       } else if (api.auth_type === 'api_key' && credentials.api_key) {
         headers['X-API-Key'] = credentials.api_key;
+      } else if (api.auth_type === 'token' && credentials.api_key) {
+        headers['Authorization'] = credentials.api_key;
       }
 
-      // Add parameters
-      const requestParams = { ...parameters };
+      // Merge saved credentials into parameters (to avoid asking user for ticket/token every time)
+      const requestParams = {
+        ...credentials, // Use all saved credentials as base (includes ticket, token, etc)
+        ...parameters   // Override with manually provided params if any
+      };
 
-      // For ticket auth, add ticket to params if it exists in credentials
+      // Ensure ticket is handled if specific to this API
       if (api.auth_type === 'ticket' && credentials.ticket) {
         requestParams.ticket = credentials.ticket;
       }

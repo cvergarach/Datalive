@@ -16,6 +16,7 @@ import reportsRoutes from './routes/reports.js';
 import integrationsRoutes from './routes/integrations.js';
 import webhooksRoutes from './routes/webhooks.js';
 import statsRoutes from './routes/stats.js';
+import chatRoutes from './routes/chat.js';
 
 dotenv.config();
 
@@ -78,6 +79,7 @@ app.use('/api/projects/:projectId/insights', insightsRoutes);
 app.use('/api/projects/:projectId/dashboards', dashboardsRoutes);
 app.use('/api/projects/:projectId/reports', reportsRoutes);
 app.use('/api/projects/:projectId/integrations', integrationsRoutes);
+app.use('/api/projects/:projectId/chats', chatRoutes);
 app.use('/api/webhooks', webhooksRoutes);
 app.use('/api/stats', statsRoutes);
 

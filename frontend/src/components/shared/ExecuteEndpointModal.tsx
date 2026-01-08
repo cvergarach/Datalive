@@ -80,9 +80,9 @@ export function ExecuteEndpointModal({
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
                                 <span className={`px-2 py-0.5 rounded text-xs font-bold ${endpoint.method === 'GET' ? 'bg-blue-100 text-blue-700' :
-                                        endpoint.method === 'POST' ? 'bg-green-100 text-green-700' :
-                                            endpoint.method === 'PUT' ? 'bg-yellow-100 text-yellow-700' :
-                                                'bg-gray-100 text-gray-700'
+                                    endpoint.method === 'POST' ? 'bg-green-100 text-green-700' :
+                                        endpoint.method === 'PUT' ? 'bg-yellow-100 text-yellow-700' :
+                                            'bg-gray-100 text-gray-700'
                                     }`}>
                                     {endpoint.method}
                                 </span>
@@ -152,12 +152,22 @@ export function ExecuteEndpointModal({
                     )}
 
                     {result && (
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2 p-3 bg-green-50 text-green-700 rounded-lg text-sm">
-                                <CheckCircle2 className="h-4 w-4" />
-                                <span className="font-semibold">Execution Successful!</span>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-3 bg-green-50 text-green-700 rounded-lg text-sm border border-green-100">
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    <span className="font-semibold">¡Ejecución Exitosa!</span>
+                                </div>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 bg-white border-green-200 text-green-700 hover:bg-green-50"
+                                    onClick={() => window.location.href = '/data'}
+                                >
+                                    Ir a Sección de Datos
+                                </Button>
                             </div>
-                            <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-xs overflow-x-auto">
+                            <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-xs overflow-x-auto border border-gray-700">
                                 <pre>{JSON.stringify(result, null, 2)}</pre>
                             </div>
                         </div>

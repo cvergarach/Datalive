@@ -51,83 +51,78 @@ app.post('/mcp/call', async (req, res) => {
 });
 
 async function analyzeAPIDocument(textContent, projectId, mimeType = 'application/pdf') {
-  const prompt = `🚨 CRITICAL TASK: Extract API Configuration for AUTOMATIC EXECUTION 🚨
+  const prompt = `🚨 TAREA CRÍTICA: Extraer Configuración de API para EJECUCIÓN AUTOMÁTICA 🚨
 
-YOU ARE AN EXPERT API ANALYZER WITH ONE GOAL:
-Extract EVERYTHING needed to automatically execute API endpoints WITHOUT user intervention.
-
-═══════════════════════════════════════════════════════════════
-
-WHAT YOU MUST EXTRACT:
-
-1. **BASE URL** - The API endpoint
-2. **AUTHENTICATION CREDENTIALS** - Actual values from the document
-3. **ENDPOINTS** - All available API endpoints
-4. **PARAMETERS** - With example values for auto-execution
-5. **EXECUTION SEQUENCE** - Order to execute endpoints
+TU OBJETIVO: Extraer TODA la información necesaria para ejecutar los endpoints de la API SIN intervención del usuario, presentando la información en un lenguaje COMERCIAL y de NEGOCIO.
 
 ═══════════════════════════════════════════════════════════════
 
-CREDENTIAL EXTRACTION (CRITICAL):
-
-Look for these patterns in the document:
-
-**Python/JavaScript Code:**
-- BASE_URL = "https://..." → Extract the URL
-- USERNAME = "user123" → Extract the username
-- PASSWORD = "pass456" → Extract the password
-- API_KEY = "sk_..." → Extract the key
-- TOKEN = "..." → Extract the token
-
-**Documentation:**
-- "Username: admin" → Extract "admin"
-- "API Key: abc123" → Extract "abc123"
-- "Example: ticket=xyz" → Extract "xyz"
-
-**IMPORTANT:** Extract the ACTUAL VALUES, not placeholders!
+REGLAS DE IDIOMA Y TONO (ESTRICTO):
+1. **IDIOMA**: Todo el contenido generado (nombres, descripciones, estrategias) DEBE estar en ESPAÑOL.
+2. **TONO COMERCIAL**: No uses lenguaje técnico. En lugar de "GET /api/v1/customers", usa "Consultar Cartera de Clientes". En lugar de "Parámetros de cabecera", usa "Datos de Acceso".
+3. **VALOR DE NEGOCIO**: Las descripciones deben explicar QUÉ hace la funcionalidad para la empresa. Ej: "Permite obtener el listado de facturas pendientes para gestión de cobranza".
 
 ═══════════════════════════════════════════════════════════════
 
-OUTPUT FORMAT (STRICT JSON):
+QUÉ DEBES EXTRAER:
+
+1. **URL BASE** - El punto de entrada de la API.
+2. **CREDENCIALES DE AUTENTICACIÓN** - Valores reales encontrados en el documento.
+3. **ENDPOINTS (FUNCIONALIDADES)** - Todas las capacidades disponibles.
+4. **PARÁMETROS** - Con valores de ejemplo para ejecución automática.
+5. **ESTRATEGIA DE EJECUCIÓN** - Orden lógico para usar las funciones.
+
+═══════════════════════════════════════════════════════════════
+
+EXTRACCIÓN DE CREDENCIALES (CRÍTICO):
+
+Busca estos patrones en el documento y extrae los VALORES REALES:
+- "Username: admin", "API Key: abc123", "TOKEN = '...'", etc.
+- ¡NO uses marcadores como "tu_usuario" o "coloca_aqui_tu_clave"! Extrae lo que diga el documento.
+
+═══════════════════════════════════════════════════════════════
+
+FORMATO DE SALIDA (STRICT JSON):
 
 {
   "apis": [{
-    "name": "API Name",
-    "description": "Brief description",
-    "base_url": "https://api.example.com",
+    "name": "Nombre Comercial de la API (Ej: Sistema de Gestión de Ventas)",
+    "description": "Descripción orientada a negocio (qué valor aporta a la empresa)",
+    "base_url": "https://api.ejemplo.com",
     "auth_type": "basic|bearer|api_key|ticket|oauth|token|none",
     "auto_executable": true,
     "extracted_credentials": {
-      "username": "actual_username_from_doc",
-      "password": "actual_password_from_doc",
-      "api_key": "actual_key_from_doc",
-      "ticket": "actual_ticket_from_doc"
+      "username": "valor_real_del_doc",
+      "password": "valor_real_del_doc",
+      "api_key": "valor_real_del_doc",
+      "ticket": "valor_real_del_doc"
     },
     "auth_details": {
       "header_name": "Authorization",
-      "format": "Basic base64(username:password)",
-      "guide": "Credentials extracted from document"
+      "format": "Basic base64(usuario:contraseña)",
+      "guide": "Guía breve en español para el usuario"
     },
-    "execution_strategy": "Step-by-step execution plan",
+    "execution_strategy": "Plan de ejecución paso a paso orientado a negocio",
     "endpoints": [
       {
         "method": "GET|POST|PUT|DELETE|PATCH",
-        "path": "/v1/resource",
-        "description": "What this endpoint does",
+        "path": "/v1/recurso",
+        "description": "Nombre funcional en español (Ej: Consultar Inventario Actual)",
         "category": "auth|data_fetch|data_modify|other",
         "estimated_value": "high|medium|low",
         "parameters": [
           {
-            "name": "param_name",
+            "name": "nombre_parametro",
             "type": "string",
             "required": true,
-            "description": "Parameter description",
-            "example": "actual_value_from_doc",
-            "auto_value": "value_to_use_for_auto_execution"
+            "description": "Descripción clara en español",
+            "example": "valor_del_doc",
+            "auto_value": "valor_para_ejecucion_automatica"
           }
         ],
         "execution_order": 1,
-        "requires_auth_token": false
+        "requires_auth_token": false,
+        "execution_steps": "Instrucciones de negocio para usar esta función"
       }
     ]
   }]
@@ -135,40 +130,14 @@ OUTPUT FORMAT (STRICT JSON):
 
 ═══════════════════════════════════════════════════════════════
 
-CRITICAL INSTRUCTIONS:
+INSTRUCCIONES ADICIONALES:
+- Establece 'auto_executable' como true si encontraste credenciales reales.
+- El 'execution_order' debe ser jerárquico (Autenticación primero, luego consultas).
+- **PROHIBIDO**: Hablar de "triggers", "request bodies", "JSON syntax" en las descripciones. Habla de "activar proceso", "enviar datos de cliente", "actualizar estado".
 
-1. **ALWAYS extract actual credential values** from the document
-   - If you see USERNAME = "Claro_cvergara_API" → use "Claro_cvergara_API"
-   - If you see PASSWORD = "H0men3tw0rk@api" → use "H0men3tw0rk@api"
-   - DO NOT use placeholders like "your_username" or "example_password"
+RETORNA SOLO JSON VÁLIDO. SIN ETIQUETAS DE MARKDOWN.
 
-2. **Set auto_executable = true** if:
-   - You found actual credentials in the document
-   - You can infer parameter values
-   - The API can be executed without user input
-
-3. **Set execution_order** for endpoints:
-   - Auth endpoints should be order 1
-   - Data fetch endpoints should be order 2+
-   - Endpoints that need tokens should come after auth
-
-4. **Provide auto_value for parameters**:
-   - Use example values from the document
-   - Use extracted credentials for auth parameters
-   - Use common defaults (e.g., "password" for grantType)
-
-5. **Detect auth type correctly**:
-   - USERNAME + PASSWORD → "basic"
-   - API_KEY or X-API-Key → "api_key"
-   - Bearer token → "bearer"
-   - ticket parameter → "ticket"
-   - TOKEN in headers → "token"
-
-═══════════════════════════════════════════════════════════════
-
-RETURN VALID JSON ONLY. NO MARKDOWN TAGS.
-
-BEGIN ANALYSIS:`;
+COMIENZA EL ANÁLISIS COMERCIAL:`;
 
   console.log('📥 Analyzing text content with Gemini...');
   console.log('🔍 DEBUG - Text content length:', textContent.length);

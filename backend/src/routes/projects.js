@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, settings } = req.body;
     const userId = req.user.id;
 
     // Create project using Admin client to bypass RLS insertion check
@@ -51,7 +51,12 @@ router.post('/', async (req, res) => {
       .insert({
         name,
         description,
-        owner_id: userId
+        owner_id: userId,
+        settings: settings || {
+          ai_model: 'gemini-2.5-flash',
+          language: 'es',
+          tone: 'commercial'
+        }
       })
       .select()
       .single();
@@ -118,7 +123,7 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description } = req.body;
+    const { name, description, settings } = req.body;
     const userId = req.user.id;
 
     // Check user is owner or admin
@@ -133,10 +138,16 @@ router.put('/:id', async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
+    // Prepare update object
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (description) updateData.description = description;
+    if (settings) updateData.settings = settings;
+
     // Update project
     const { data: project, error } = await supabaseAdmin
       .from('projects')
-      .update({ name, description })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
