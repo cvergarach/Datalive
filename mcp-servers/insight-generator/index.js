@@ -45,9 +45,10 @@ app.post('/mcp/call', async (req, res) => {
 });
 
 async function callAI(prompt, settings, retries = 3) {
-  const modelToUse = settings?.ai_model || 'sonnet';
+  const modelToUse = settings?.ai_model || 'gemini-2.5-flash';
   const isClaude = modelToUse === 'haiku' || modelToUse === 'sonnet';
-  const effectiveModel = isClaude ? (CLAUDE_MODEL_MAP[modelToUse] || DEFAULT_CLAUDE_MODEL) : 'gemini-2.5-flash';
+  const effectiveModel = isClaude ? (CLAUDE_MODEL_MAP[modelToUse] || DEFAULT_CLAUDE_MODEL) : modelToUse;
+
 
   let delay = 3000;
   for (let i = 0; i <= retries; i++) {

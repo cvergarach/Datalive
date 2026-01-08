@@ -23,7 +23,7 @@ const MODEL_MAP = {
 const selectedModel = process.env.CLAUDE_MODEL || 'haiku';
 const modelName = MODEL_MAP[selectedModel];
 
-console.log(`🤖 Claude Service initialized with model: ${selectedModel} (${modelName})`);
+console.log(`🔌 Claude internal service initialized (${modelName})`);
 
 class ClaudeService {
     constructor() {

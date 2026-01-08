@@ -126,7 +126,8 @@ INSTRUCCIONES:
 3. No inventes datos.
 4. Responde de forma que un ejecutivo de negocios lo entienda.`;
 
-        if (settings.ai_model.includes('gemini')) {
+        if (settings.ai_model?.includes('gemini')) {
+            console.log(`💬 Chat using Gemini: ${settings.ai_model || 'gemini-2.5-flash'}`);
             const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
             const result = await genAI.models.generateContent({
                 model: settings.ai_model || "gemini-2.5-flash",
@@ -134,6 +135,7 @@ INSTRUCCIONES:
             });
             aiResponse = result.text;
         } else {
+            console.log(`💬 Chat using Claude: ${settings.ai_model || 'claude-3-5-sonnet-20241022'}`);
             const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
             const msg = await anthropic.messages.create({
                 model: settings.ai_model || "claude-3-5-sonnet-20241022",
@@ -142,6 +144,7 @@ INSTRUCCIONES:
             });
             aiResponse = msg.content[0].text;
         }
+
 
         // 4. Save AI message
         const { data: assistantMsg, error: aiMsgError } = await supabaseAdmin

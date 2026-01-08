@@ -16,7 +16,9 @@ const client = new GoogleGenAI({ apiKey });
 class GeminiService {
   constructor() {
     this.model = 'gemini-2.5-flash';
+    console.log(`🚀 Gemini Service initialized with model: ${this.model}`);
   }
+
 
   /**
    * Upload file to Gemini
