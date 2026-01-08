@@ -89,33 +89,52 @@ RETORNA SOLO JSON VÁLIDO. SIN ETIQUETAS DE MARKDOWN.`;
 
     try {
       let responseText;
-      if (isClaude) {
-        const message = await anthropic.messages.create({
-          model: effectiveModel,
-          max_tokens: 8192,
-          temperature: 0.4,
-          messages: [{ role: 'user', content: `${prompt}\n\nDocument content:\n${textContent}` }]
-        });
-        responseText = message.content[0].text;
-      } else {
-        const result = await genAI.models.generateContent({
-          model: effectiveModel,
-          contents: [{ role: 'user', parts: [{ text: `${prompt}\n\nDocument content:\n${textContent}` }] }],
-          generationConfig: { maxOutputTokens: 8192, temperature: 0.4 }
-        });
-        responseText = result.text;
+      const maxRetries = 2;
+      let lastError;
+
+      for (let i = 0; i <= maxRetries; i++) {
+        try {
+          if (isClaude) {
+            const message = await anthropic.messages.create({
+              model: effectiveModel,
+              max_tokens: 8192,
+              temperature: 0.4,
+              messages: [{ role: 'user', content: `${prompt}\n\nDocument content:\n${textContent}` }]
+            });
+            responseText = message.content[0].text;
+          } else {
+            const result = await genAI.models.generateContent({
+              model: effectiveModel,
+              contents: [{ role: 'user', parts: [{ text: `${prompt}\n\nDocument content:\n${textContent}` }] }],
+              generationConfig: { maxOutputTokens: 8192, temperature: 0.4 }
+            });
+            responseText = result.text;
+          }
+          break; // Success
+        } catch (error) {
+          lastError = error;
+          if (i < maxRetries && (error.message.includes('overloaded') || error.status === 503)) {
+            console.warn(`⚠️ [ANALYZER] Model overloaded. Retrying... (${i + 1}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, 3000 * (i + 1)));
+            continue;
+          }
+          throw error;
+        }
       }
 
       // Cleanup response
-      let cleanedText = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+      let cleanedText = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
       const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error('No valid JSON found in AI response');
+      if (!jsonMatch) {
+        console.error('❌ [ANALYZER] No JSON match. Raw response:', responseText);
+        throw new Error('No valid JSON found in AI response');
+      }
 
       const parsed = JSON.parse(jsonMatch[0]);
       console.log(`✅ [ANALYZER] Analysis complete. Discovered ${parsed.apis?.length || 0} APIs.`);
       return parsed;
     } catch (error) {
-      console.error(`❌ [ANALYZER] Error:`, error.message);
+      console.error(`❌ [ANALYZER] Critical Error:`, error.message);
       throw error;
     }
   }
