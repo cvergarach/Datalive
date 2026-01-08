@@ -103,10 +103,11 @@ router.post('/:chatId/messages', async (req, res) => {
 
         const { data: apiData } = await supabaseAdmin
             .from('api_data')
-            .select('data, created_at, api_id, endpoint_id')
+            .select('data, executed_at, api_id, endpoint_id')
             .eq('project_id', projectId)
-            .order('created_at', { ascending: false })
-            .limit(5); // Last 5 technical captures
+            .order('executed_at', { ascending: false })
+            .limit(5); // Last  technical captures
+
 
         console.log(`🔍 Chat context for project ${projectId}: found ${apiData?.length || 0} records`);
 
