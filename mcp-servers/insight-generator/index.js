@@ -20,7 +20,9 @@ const CLAUDE_MODEL_MAP = {
 
 app.post('/mcp/call', async (req, res) => {
   try {
+    const { tool, params } = req.body;
     console.log(`📡 [MCP] Received tool call: ${tool}`);
+
     if (tool === 'generate_insights') {
       console.log(`🧠 [MCP] Params: project_id=${params.project_id}, data_len=${params.data_content?.length || 0}`);
       const result = await generateInsights(params.project_id, params.data_content, params.settings);
@@ -28,9 +30,11 @@ app.post('/mcp/call', async (req, res) => {
     }
 
     if (tool === 'suggest_dashboards') {
-      const result = await suggestDashboards(params.project_id, params.data_schema, params.settings);
+      console.log(`📊 [MCP] Suggesting dashboards for project ${params.project_id}`);
+      const result = await suggestDashboards(params.project_id, params.data_content, params.settings);
       return res.json(result);
     }
+
 
     if (tool === 'generate_report') {
       const result = await generateReport(params.project_id, params.config, params.settings);
