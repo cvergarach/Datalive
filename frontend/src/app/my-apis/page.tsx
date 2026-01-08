@@ -266,9 +266,9 @@ export default function APIsPage() {
                                                                             setSelectedApiForExecution(apiItem.id);
                                                                             setExecuteModalOpen(true);
                                                                         }}
-                                                                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl px-10 py-7 h-auto shadow-xl shadow-blue-500/20 transition-all border-none transform hover:-translate-y-1 active:translate-y-0"
+                                                                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl px-6 h-11 shadow-sm hover:shadow-md transition-all border-none transform hover:scale-[1.02] active:scale-95 whitespace-nowrap"
                                                                     >
-                                                                        <Zap className="mr-2 h-5 w-5 fill-white" />
+                                                                        <Zap className="mr-2 h-4 w-4 fill-white" />
                                                                         Ejecutar Acción
                                                                     </Button>
                                                                 </div>

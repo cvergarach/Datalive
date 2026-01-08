@@ -179,7 +179,7 @@ export function ExecuteEndpointModal({
                         Cancelar
                     </Button>
                     <Button
-                        className="bg-slate-900 hover:bg-blue-600 text-white font-bold px-8 py-6 rounded-xl shadow-lg hover:shadow-blue-500/20 transition-all transform hover:-translate-y-0.5"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 h-11 rounded-xl shadow-sm hover:shadow-md transition-all transform hover:scale-[1.02] active:scale-95"
                         onClick={handleExecute}
                         disabled={loading || requiredParams.some(p => !params[p.name])}
                     >
