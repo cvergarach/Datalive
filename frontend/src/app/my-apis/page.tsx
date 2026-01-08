@@ -232,71 +232,72 @@ export default function APIsPage() {
                                         {expandedApi === apiItem.id && (
                                             <div className="border-t border-gray-100 bg-gray-50/30">
                                                 <div className="overflow-x-auto">
-                                                    <table className="w-full text-left text-sm">
-                                                        <thead className="text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50/80">
+                                                    <table className="w-full text-left text-sm border-separate border-spacing-y-2 px-4">
+                                                        <thead className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                                                             <tr>
-                                                                <th className="px-6 py-4">Method</th>
-                                                                <th className="px-6 py-4">Endpoint</th>
-                                                                <th className="px-6 py-4 w-1/2">Description</th>
-                                                                <th className="px-6 py-4">Value</th>
-                                                                <th className="px-6 py-4">Actions</th>
+                                                                <th className="px-4 py-2">Servicio / Acción</th>
+                                                                <th className="px-4 py-2 w-1/3 text-center">Valor para el Negocio</th>
+                                                                <th className="px-4 py-2 text-center">Estado</th>
+                                                                <th className="px-4 py-2 text-right">Acción</th>
                                                             </tr>
                                                         </thead>
-                                                        <tbody className="divide-y divide-gray-100">
+                                                        <tbody className="">
                                                             {!apiItem.endpoints ? (
                                                                 <tr>
-                                                                    <td colSpan={5} className="px-6 py-10 text-center text-gray-400 italic">
-                                                                        Loading endpoints...
+                                                                    <td colSpan={4} className="px-4 py-10 text-center text-gray-400 italic">
+                                                                        Analizando capacidades de la API...
                                                                     </td>
                                                                 </tr>
                                                             ) : apiItem.endpoints.length === 0 ? (
                                                                 <tr>
-                                                                    <td colSpan={5} className="px-6 py-10 text-center text-gray-400 italic">
-                                                                        No endpoints found for this API.
+                                                                    <td colSpan={4} className="px-4 py-10 text-center text-gray-400 italic">
+                                                                        No se detectaron servicios disponibles.
                                                                     </td>
                                                                 </tr>
                                                             ) : (
                                                                 apiItem.endpoints.map((ep: any) => (
-                                                                    <tr key={ep.id} className="bg-transparent hover:bg-white transition-colors">
-                                                                        <td className="px-6 py-4">
-                                                                            <span className={`px-2 py-1 rounded text-[10px] font-bold ${ep.method === 'GET' ? 'bg-blue-100 text-blue-700' :
-                                                                                ep.method === 'POST' ? 'bg-green-100 text-green-700' :
-                                                                                    ep.method === 'PUT' ? 'bg-yellow-100 text-yellow-700' :
-                                                                                        'bg-gray-100 text-gray-700'
-                                                                                }`}>
-                                                                                {ep.method}
-                                                                            </span>
-                                                                        </td>
-                                                                        <td className="px-6 py-4 font-mono text-xs">{ep.path}</td>
-                                                                        <td className="px-6 py-4">
-                                                                            <div className="space-y-1">
-                                                                                <p className="text-gray-900 font-medium">{ep.description}</p>
-                                                                                {ep.execution_steps && (
-                                                                                    <div className="flex items-start gap-1.5 text-[11px] text-primary bg-primary/5 p-1.5 rounded border border-primary/10">
-                                                                                        <Zap className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                                                                                        <span>{ep.execution_steps}</span>
-                                                                                    </div>
-                                                                                )}
+                                                                    <tr key={ep.id} className="bg-white/40 hover:bg-white border border-gray-100 rounded-xl transition-all duration-200 group shadow-sm hover:shadow-md">
+                                                                        <td className="px-4 py-4 rounded-l-xl border-y border-l border-gray-100">
+                                                                            <div className="flex items-center gap-3">
+                                                                                <div className={`p-2 rounded-lg ${ep.method === 'GET' ? 'bg-blue-50 text-blue-500' :
+                                                                                        ep.method === 'POST' ? 'bg-emerald-50 text-emerald-500' :
+                                                                                            'bg-slate-50 text-slate-500'
+                                                                                    }`}>
+                                                                                    {ep.category === 'auth' ? <Shield className="h-4 w-4" /> :
+                                                                                        ep.category === 'data_fetch' ? <Database className="h-4 w-4" /> :
+                                                                                            <Zap className="h-4 w-4" />}
+                                                                                </div>
+                                                                                <div className="flex flex-col">
+                                                                                    <span className="text-gray-900 font-bold text-sm tracking-tight">{ep.description || 'Consulta de Datos'}</span>
+                                                                                    <span className="text-[10px] font-medium text-gray-400 font-mono hidden group-hover:block transition-all animate-in fade-in slide-in-from-top-1">
+                                                                                        {ep.method} • {ep.path}
+                                                                                    </span>
+                                                                                </div>
                                                                             </div>
                                                                         </td>
-                                                                        <td className="px-6 py-4">
-                                                                            <span className="flex items-center text-amber-600 font-bold">
-                                                                                <Zap className="h-3 w-3 mr-1" /> {ep.estimated_value}
+                                                                        <td className="px-4 py-4 border-y border-gray-100">
+                                                                            <p className="text-xs text-gray-500 leading-relaxed text-center">
+                                                                                {ep.execution_steps || 'Procesa y extrae información operativa relevante.'}
+                                                                            </p>
+                                                                        </td>
+                                                                        <td className="px-4 py-4 border-y border-gray-100 text-center">
+                                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-600 border border-green-100">
+                                                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse" />
+                                                                                ACTIVO
                                                                             </span>
                                                                         </td>
-                                                                        <td className="px-6 py-4">
+                                                                        <td className="px-4 py-4 rounded-r-xl border-y border-r border-gray-100 text-right">
                                                                             <Button
                                                                                 size="sm"
-                                                                                variant="outline"
-                                                                                className="flex items-center gap-1.5"
+                                                                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg px-6 py-5 shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
                                                                                 onClick={() => {
                                                                                     setEndpointToExecute(ep);
                                                                                     setSelectedApiForExecution(apiItem.id);
                                                                                     setExecuteModalOpen(true);
                                                                                 }}
                                                                             >
-                                                                                <Zap className="h-3.5 w-3.5" />
-                                                                                Execute
+                                                                                <Zap className="h-3.5 w-3.5 mr-2 fill-white" />
+                                                                                Ejecutar Acción
                                                                             </Button>
                                                                         </td>
                                                                     </tr>
