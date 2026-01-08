@@ -1,5 +1,7 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
+import analyzer from './analyzer.js';
+import insightGenerator from './insight-generator.js';
 
 dotenv.config();
 
@@ -99,12 +101,7 @@ class MCPClient {
       console.warn('⚠️ Could not fetch project settings for MCP, using defaults:', error.message);
     }
 
-    return this.call('apiAnalyzer', 'analyze_api_document', {
-      text_content: textContent,
-      project_id: projectId,
-      mime_type: mimeType,
-      settings: settings // Provide settings to the MCP server
-    });
+    return analyzer.analyzeAPIDocument(textContent, projectId, mimeType, settings);
   }
 
   async extractEndpoints(textContent) {
@@ -142,20 +139,12 @@ class MCPClient {
   // Insight Generator Methods
   async generateInsights(projectId, dataContent) {
     const settings = await this._getProjectSettings(projectId);
-    return this.call('insightGenerator', 'generate_insights', {
-      project_id: projectId,
-      data_content: dataContent,
-      settings
-    });
+    return insightGenerator.generateInsights(projectId, dataContent, settings);
   }
 
   async suggestDashboards(projectId, dataContent) {
     const settings = await this._getProjectSettings(projectId);
-    return this.call('insightGenerator', 'suggest_dashboards', {
-      project_id: projectId,
-      data_content: dataContent,
-      settings
-    });
+    return insightGenerator.suggestDashboards(projectId, dataContent, settings);
   }
 
   async generateReport(projectId, config) {
