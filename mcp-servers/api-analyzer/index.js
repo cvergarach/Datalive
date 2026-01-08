@@ -296,6 +296,12 @@ async function extractAuthMethods(geminiUri) {
   return { auth_methods: [] };
 }
 
-app.listen(PORT, () => {
-  console.log(`🤖 MCP API Analyzer running on port ${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🤖 MCP API Analyzer is UP and running on port ${PORT}`);
+  console.log(`🤖 Listening on 0.0.0.0:${PORT}`);
+});
+
+server.on('error', (error) => {
+  console.error('❌ Server failed to start:', error);
+  process.exit(1);
 });
