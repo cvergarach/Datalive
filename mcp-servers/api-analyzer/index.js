@@ -13,8 +13,12 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Models
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
+if (!process.env.GEMINI_API_KEY) console.warn('⚠️ WARNING: GEMINI_API_KEY is not set');
+if (!process.env.CLAUDE_API_KEY) console.warn('⚠️ WARNING: CLAUDE_API_KEY is not set');
+
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || 'dummy' });
+const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY || 'dummy' });
+
 
 const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
 const CLAUDE_MODEL_MAP = {
