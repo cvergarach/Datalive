@@ -61,11 +61,12 @@ export default function APIsPage() {
         }
     };
 
-    const fetchApiDetails = async (apiId: string) => {
+    const fetchApiDetails = async (apiId: string, projectIdOverride?: string) => {
+        const projectId = projectIdOverride || selectedProjectId;
         try {
-            const { data } = await api.get(`/projects/${selectedProjectId}/apis/${apiId}`);
-            // Update the apis state with the detailed info
-            setApis(apis.map(a => a.id === apiId ? { ...a, endpoints: data.api.api_endpoints } : a));
+            const { data } = await api.get(`/projects/${projectId}/apis/${apiId}`);
+            // Update the apis state with the detailed info using functional update to ensure consistency
+            setApis(prev => prev.map(a => a.id === apiId ? { ...a, endpoints: data.api.api_endpoints } : a));
         } catch (error) {
             console.error('Error fetching API details:', error);
         }
@@ -88,7 +89,13 @@ export default function APIsPage() {
         setLoading(true);
         try {
             const { data } = await api.get(`/projects/${projectId}/apis`);
-            setApis(data.apis || []);
+            const discoveredApis = data.apis || [];
+            setApis(discoveredApis);
+
+            // Automatically fetch capabilities for each service
+            discoveredApis.forEach((apiItem: any) => {
+                fetchApiDetails(apiItem.id, projectId);
+            });
         } catch (error) {
             console.error('Error fetching APIs:', error);
         } finally {
@@ -192,31 +199,20 @@ export default function APIsPage() {
                                                 </p>
                                             )}
 
-                                            {/* Actionable Intelligence Section - Spaced Out */}
-                                            {(apiItem.execution_strategy || apiItem.auth_details?.guide) && (
-                                                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-gray-100 pt-8">
-                                                    {apiItem.execution_strategy && (
-                                                        <div className="space-y-4">
-                                                            <div className="flex items-center gap-3 text-blue-600 font-bold text-xs uppercase tracking-widest">
-                                                                <Lightbulb className="h-4 w-4" />
-                                                                Estrategia de Operación
-                                                            </div>
-                                                            <div className="text-sm text-gray-600 leading-relaxed space-y-2 whitespace-pre-wrap">
-                                                                {apiItem.execution_strategy}
-                                                            </div>
+                                            {/* Executive Capability Summary */}
+                                            {apiItem.execution_strategy && (
+                                                <div className="mt-8 bg-blue-50/20 rounded-2xl p-6 border border-blue-100/30">
+                                                    <div className="flex items-center gap-3 text-blue-600 font-bold text-xs uppercase tracking-widest mb-3">
+                                                        <div className="p-1.5 bg-blue-600 text-white rounded-lg">
+                                                            <Lightbulb className="h-3.5 w-3.5" />
                                                         </div>
-                                                    )}
-                                                    {apiItem.auth_details?.guide && (
-                                                        <div className="space-y-4">
-                                                            <div className="flex items-center gap-3 text-slate-600 font-bold text-xs uppercase tracking-widest">
-                                                                <Shield className="h-4 w-4" />
-                                                                Guía de Acceso Seguro
-                                                            </div>
-                                                            <div className="text-sm text-gray-600 leading-relaxed space-y-2 whitespace-pre-wrap">
-                                                                {apiItem.auth_details.guide}
-                                                            </div>
-                                                        </div>
-                                                    )}
+                                                        Potencial de Automatización
+                                                    </div>
+                                                    <p className="text-sm text-gray-700 leading-relaxed">
+                                                        {apiItem.execution_strategy.length > 250
+                                                            ? apiItem.execution_strategy.substring(0, 250) + "..."
+                                                            : apiItem.execution_strategy}
+                                                    </p>
                                                 </div>
                                             )}
                                         </div>
@@ -239,7 +235,7 @@ export default function APIsPage() {
                                                             <div key={ep.id} className="flex flex-col md:flex-row items-center justify-between gap-4 p-5 bg-white border border-gray-100 rounded-2xl hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 transition-all group">
                                                                 <div className="flex items-center gap-4 flex-1">
                                                                     <div className={`p-3 rounded-xl ${ep.method === 'GET' ? 'bg-blue-50 text-blue-600' :
-                                                                        ep.method === 'POST' ? 'bg-emerald-50 text-emerald-600' :
+                                                                        ep.method === 'POST' ? 'bg-indigo-50 text-indigo-600' :
                                                                             'bg-slate-50 text-slate-500'
                                                                         }`}>
                                                                         {ep.category === 'auth' ? <Shield className="h-5 w-5" /> :
@@ -270,9 +266,10 @@ export default function APIsPage() {
                                                                             setSelectedApiForExecution(apiItem.id);
                                                                             setExecuteModalOpen(true);
                                                                         }}
-                                                                        className="bg-slate-900 hover:bg-blue-600 text-white font-bold rounded-xl px-8 py-6 h-auto shadow-lg hover:shadow-blue-500/20 transition-all border-none"
+                                                                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl px-10 py-7 h-auto shadow-xl shadow-blue-500/20 transition-all border-none transform hover:-translate-y-1 active:translate-y-0"
                                                                     >
-                                                                        Ejecutar Solicitud
+                                                                        <Zap className="mr-2 h-5 w-5 fill-white" />
+                                                                        Ejecutar Acción
                                                                     </Button>
                                                                 </div>
                                                             </div>
