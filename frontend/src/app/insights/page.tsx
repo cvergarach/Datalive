@@ -160,8 +160,8 @@ export default function InsightsPage() {
                                     <Card key={insight.id} className="bg-gray-900 border-gray-800 hover:border-blue-500/50 transition-all duration-300 group overflow-hidden">
                                         <CardHeader className="pb-4">
                                             <div className="flex justify-between items-start mb-4">
-                                                <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${getTypeColor(insight.type)}`}>
-                                                    {insight.type}
+                                                <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${getTypeColor(insight.insight_type)}`}>
+                                                    {insight.insight_type}
                                                 </div>
                                                 <div className="flex items-center gap-1 text-[10px] font-bold text-gray-500">
                                                     <Calendar className="h-3 w-3" />
@@ -169,8 +169,8 @@ export default function InsightsPage() {
                                                 </div>
                                             </div>
                                             <div className="flex gap-4">
-                                                <div className={`mt-1 p-2 rounded-lg ${getTypeColor(insight.type)} shrink-0`}>
-                                                    {getTypeIcon(insight.type)}
+                                                <div className={`mt-1 p-2 rounded-lg ${getTypeColor(insight.insight_type)} shrink-0`}>
+                                                    {getTypeIcon(insight.insight_type)}
                                                 </div>
                                                 <CardTitle className="text-xl group-hover:text-blue-400 transition-colors">
                                                     {insight.title}

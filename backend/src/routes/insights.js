@@ -72,13 +72,13 @@ router.post('/generate', async (req, res) => {
 
       const insightsToInsert = result.insights.map(insight => ({
         project_id: projectId,
-        type: insight.type,
+        insight_type: insight.type,
         title: insight.title,
         description: insight.description,
         confidence: insight.confidence,
+        source_data_ids: data_ids,
         metadata: {
-          actionable_next_step: insight.actionable_next_step,
-          source_data_ids: data_ids
+          actionable_next_step: insight.actionable_next_step
         }
       }));
 

@@ -31,7 +31,7 @@ class IntelligenceService {
             if (insightResult && insightResult.insights && insightResult.insights.length > 0) {
                 const insightsToInsert = insightResult.insights.map(insight => ({
                     project_id: projectId,
-                    type: insight.type,
+                    insight_type: insight.type,
                     title: insight.title,
                     description: insight.description,
                     confidence: insight.confidence,
@@ -55,6 +55,7 @@ class IntelligenceService {
             if (dashboardResult && dashboardResult.dashboards && dashboardResult.dashboards.length > 0) {
                 const dashboardsToInsert = dashboardResult.dashboards.map(db => ({
                     project_id: projectId,
+                    name: db.title + " (Auto-Updated)",
                     title: db.title + " (Auto-Updated)",
                     config: { widgets: db.widgets },
                     is_active: true

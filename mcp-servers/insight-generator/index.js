@@ -9,8 +9,16 @@ const app = express();
 const PORT = process.env.PORT || 3003;
 app.use(express.json({ limit: '50mb' }));
 
-const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Models Validation
+if (!process.env.GEMINI_API_KEY) {
+  console.warn('⚠️ WARNING: GEMINI_API_KEY is not set in environment variables!');
+}
+if (!process.env.CLAUDE_API_KEY) {
+  console.warn('⚠️ WARNING: CLAUDE_API_KEY is not set in environment variables!');
+}
+
+const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY || 'missing_key' });
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || 'missing_key' });
 
 const DEFAULT_CLAUDE_MODEL = 'claude-3-5-sonnet-20241022';
 const CLAUDE_MODEL_MAP = {
@@ -57,7 +65,11 @@ async function callAI(prompt, settings, retries = 3) {
   let delay = 3000;
   for (let i = 0; i <= retries; i++) {
     try {
-      console.log(`🧠 Calling ${isClaude ? 'Claude' : 'Gemini'} (${effectiveModel})... (Attempt ${i + 1})`);
+      const hasKey = !!process.env.GEMINI_API_KEY;
+      console.log(`🧠 Calling ${isClaude ? 'Claude' : 'Gemini'} (${effectiveModel})... (Attempt ${i + 1}) - KeyPresent: ${hasKey}`);
+      if (!hasKey && !isClaude) {
+        throw new Error('GEMINI_API_KEY is missing. Check Render Environment Variables.');
+      }
 
       if (isClaude) {
         const message = await anthropic.messages.create({

@@ -49,6 +49,7 @@ router.post('/generate', async (req, res) => {
 
       const dashboardsToInsert = result.dashboards.map(db => ({
         project_id: projectId,
+        name: db.title,
         title: db.title,
         config: { widgets: db.widgets },
         is_active: true
